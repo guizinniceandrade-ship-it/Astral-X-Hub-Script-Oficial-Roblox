@@ -616,11 +616,6 @@ end
 Players.PlayerAdded:Connect(AtualizarLista)
 Players.PlayerRemoving:Connect(AtualizarLista)
 
--- ========================================================
--- SISTEMA / XERIFE 
--- ========================================================
-
-
 -- ========================
 -- TELEPORTE MAPA E LOBBY
 -- ========================
@@ -664,6 +659,122 @@ local function TeleportarPara(modelo)
         char:PivotTo(ponto + Vector3.new(0, 4, 0))
     end
 end
+
+-- =======================
+-- 🔍 ACHAR O ASSASSINO
+-- =======================
+local function GetMurderer()
+    local DataRemote = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+    if not DataRemote then return nil end
+    local ok, Data = pcall(function() return DataRemote:InvokeServer() end)
+    if not ok or not Data then return nil end
+    for _, Player in next, Players:GetPlayers() do
+        if Player ~= player and Player:GetAttribute("Alive") then
+            local Info = Data[Player.Name]
+            if Info and Info.Role == "Murderer" then
+                return Player
+            end
+        end
+    end
+    return nil
+end
+
+-- 🎯 ATIRAR NO PEITO DO ASSASSINO
+local function ShootMurderer()
+    local Char = player.Character
+    if not Char then return end
+
+    local Gun = Char:FindFirstChild("Gun") or (player.Backpack and player.Backpack:FindFirstChild("Gun"))
+    if not Gun then return end
+    if Gun.Parent ~= Char then
+        Gun.Parent = Char
+        task.wait(0.05)
+    end
+
+    local Murderer = GetMurderer()
+    if not Murderer or not Murderer.Character then return end
+
+    local Target = Murderer.Character:FindFirstChild("Torso") 
+                or Murderer.Character:FindFirstChild("UpperTorso") 
+                or Murderer.Character:FindFirstChild("HumanoidRootPart")
+    if not Target then return end
+
+    local ShootEvent = Gun:FindFirstChild("Shoot", true)
+    if ShootEvent then
+        ShootEvent:FireServer(CFrame.new(Target.Position))
+    end
+end
+
+-- 🎯 CRIAR BOTÃO ARRASTÁVEL
+local function CreateShootButton()
+    if ShootButtonGui then return end
+    local Gui = Instance.new("ScreenGui")
+    Gui.Name = "XerifeTiro"
+    Gui.ResetOnSpawn = false
+    Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    Gui.Parent = CoreGui
+
+    local Btn = Instance.new("ImageButton")
+    Btn.Size = UDim2.new(0,80,0,80)
+    Btn.Position = UDim2.new(0.5,-40,0.5,-40)
+    Btn.BackgroundColor3 = Color3.fromRGB(255,40,40)
+    Btn.BackgroundTransparency = 0.3
+    Btn.BorderSizePixel = 0
+    Btn.Parent = Gui
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1,0)
+
+    local Icone = Instance.new("TextLabel")
+    Icone.Size = UDim2.new(1,0,1,0)
+    Icone.BackgroundTransparency = 1
+    Icone.Text = "\u{1f52b}"
+    Icone.TextSize = 32
+    Icone.TextColor3 = Color3.new(1,1,1)
+    Icone.Font = Enum.Font.GothamBold
+    Icone.Parent = Btn
+
+    -- ARRASTAR SÓ QUANDO SEGURAR
+    Btn.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            buttonStartPos = Btn.Position
+            dragStartPos = Input.Position
+            Input.Changed:Connect(function()
+                if Input.UserInputState == Enum.UserInputState.End then
+                    isDragging = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(Input)
+        if isDragging and (Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseMovement) then
+            Btn.Position = buttonStartPos + UDim2.fromOffset(Input.Position.X - dragStartPos.X, Input.Position.Y - dragStartPos.Y)
+        end
+    end)
+
+    -- ATIRAR AO CLICAR
+    Btn.MouseButton1Click:Connect(function()
+        if not isDragging then ShootMurderer() end
+    end)
+
+    ShootButtonGui = Gui
+end
+
+-- 🗑️ REMOVER BOTÃO
+local function RemoveShootButton()
+    if ShootButtonGui then
+        ShootButtonGui:Destroy()
+        ShootButtonGui = nil
+    end
+end
+
+-- 🔁 AUTO ATIRAR
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if AutoShoot then ShootMurderer() end
+    end
+end)
 
 -- =========================
 -- SEÇÃO: FARM / Cframe:Lerp + char:PivotTo
@@ -857,11 +968,10 @@ Sec_Arma:Toggle({Title="ESP GunDrop", Default=false, Callback=function(s) ESP_Ar
 -- =========================
 -- 🔫 ABA XERIFE
 -- =========================
-local Aba_Xerife = Window:Tab({Title = "🔫 Xerife"})
 local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
 
 Sec_Tiro:Toggle({
-    Title = "🔁 Auto Shoot Murderer",
+    Title = "Auto Shoot Murderer",
     Description = "Atira sozinho no assassino",
     Default = false,
     Callback = function(State)
