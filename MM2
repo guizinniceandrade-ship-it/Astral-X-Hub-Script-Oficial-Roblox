@@ -609,7 +609,7 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- TELEPORTE MAPA E LOBBY
 -- ========================
 
--- Busca o mapa da partida
+-- ✅ BUSCA O MAPA (IGUAL ANTES, NÃO MUDEI NADA)
 local function PegarMapa()
     for _, v in ipairs(Workspace:GetChildren()) do
         if v:IsA("Model") then
@@ -622,7 +622,7 @@ local function PegarMapa()
     end
 end
 
--- Busca o lobby
+-- ✅ AGORA USA O SEU JEITO DE BUSCAR LOBBY
 local function PegarLobby()
     for _, v in ipairs(Workspace:GetChildren()) do
         if v:IsA("Model") and v.Name:lower():find("lobby") then
@@ -631,7 +631,7 @@ local function PegarLobby()
     end
 end
 
--- Pega um ponto seguro para não ficar preso
+-- ✅ PEGA PONTO SEGURO
 local function PegarPontoSeguro(modelo)
     if not modelo then return nil end
     if modelo.PrimaryPart then return modelo.PrimaryPart.CFrame end
@@ -639,7 +639,7 @@ local function PegarPontoSeguro(modelo)
     return parte and parte.CFrame or nil
 end
 
--- Função de teleporte
+-- ✅ FUNÇÃO DE TELEPORTE
 local function TeleportarPara(modelo)
     if not modelo then return end
     local ponto = PegarPontoSeguro(modelo)
