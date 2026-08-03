@@ -49,8 +49,15 @@ local Aba_Troll = Window:Tab({Title="Trollagem"})
 local Aba_Tele = Window:Tab({Title="Teleporte"})
 
 -- ========================================================
--- VARIÁVEIS (Shoot, ShootButton e GrabGun)
+-- VARIÁVEIS XERIFE 
 -- ========================================================
+local AutoShoot = false
+local ShowShootButton = false
+local MagicBullet = false
+local AutoGrabGun = false
+local ShootButtonGui = nil
+local isDragging = false
+local dragStartPos, buttonStartPos = nil, nil
 
 -- =========================
 -- VARIÁVEIS AUTO FARM (LERP)
@@ -817,11 +824,6 @@ Sec_Animacao:Button({
     end
 })
 
--- =========================
--- 🔫 ABA XERIFE → SEÇÃO TIRO
--- =========================
-
-
 -- ===================================================
 -- 🎛️ SEÇÕES E TOGGLES DA ABA ESP
 -- ===================================================
@@ -851,3 +853,46 @@ Sec_Linha:Toggle({Title="Linha inocente", Default=false, Callback=function(s) Li
 
 local Sec_Arma = Aba_ESP:Section({Title = "ARMA"})
 Sec_Arma:Toggle({Title="ESP GunDrop", Default=false, Callback=function(s) ESP_Arma = s end})
+
+-- =========================
+-- 🔫 ABA XERIFE
+-- =========================
+local Aba_Xerife = Window:Tab({Title = "🔫 Xerife"})
+local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
+
+Sec_Tiro:Toggle({
+    Title = "🔁 Auto Shoot Murderer",
+    Description = "Atira sozinho no assassino",
+    Default = false,
+    Callback = function(State)
+        AutoShoot = State
+    end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Shoot Button",
+    Description = "Mostra botão de tiro arrastável",
+    Default = false,
+    Callback = function(State)
+        ShowShootButton = State
+        if State then CreateShootButton() else RemoveShootButton() end
+    end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Magic Bullet",
+    Description = "Mira direto no alvo",
+    Default = false,
+    Callback = function(State)
+        MagicBullet = State
+    end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Auto Grab Gun",
+    Description = "Pega arma automaticamente",
+    Default = false,
+    Callback = function(State)
+        AutoGrabGun = State
+    end
+})
