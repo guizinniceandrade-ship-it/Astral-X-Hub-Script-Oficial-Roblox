@@ -1,1 +1,139 @@
-ggggggg
+-- ===========================================
+-- ASTRAL X HUB · ESP CORRIGIDO & OTIMIZADO
+-- ===========================================
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+-- 🛡️ PROTEÇÃO
+local NomeJanela = "ASTRAL X Hub"
+if game.CoreGui:FindFirstChild(NomeJanela) then game.CoreGui[NomeJanela]:Destroy() end
+if player.PlayerGui:FindFirstChild(NomeJanela) then player.PlayerGui[NomeJanela]:Destroy() end
+for _, pasta in pairs(game.CoreGui:GetChildren()) do
+    if pasta.Name == "AstralX" then pasta:Destroy() end
+end
+
+-- ===========================================
+-- INTERFACE PRINCIPAL
+-- ===========================================
+local Window = WindUI:CreateWindow({
+    Title = "ASTRAL X Hub",
+    Folder = "AstralX",
+    Size = UDim2.fromOffset(580,460),
+    MinSize = Vector2.new(560,350),
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    HideSearchBar = true
+})
+
+-- =========================
+-- ORDEM DAS ABAS
+-- =========================
+local Aba_Assassino = Window:Tab({Title="Assassino"})
+
+local Aba_Xerife = Window:Tab({Title="Xerife"})
+
+local Aba_Farm = Window:Tab({Title="Auto Farm"})
+
+local Aba_ESP = Window:Tab({Title="ESP"})
+
+local Aba_Local = Window:Tab({Title="Local Player"})
+
+local Aba_Troll = Window:Tab({Title="Trollagem"})
+
+local Aba_Tele = Window:Tab({Title="Teleporte"})
+
+-- =========================
+-- VARIÁVEIS AUTO FARM (LERP)
+-- =========================
+local AutoFarmAtivo = false
+local collectedCoins = {}
+local CONFIG_FARM = {
+    velocidade = 22,
+    limite = 10,
+    alcance_maximo = 500
+}
+
+-- =========================
+-- VARIÁVEIS TELEPORTE PLAYER
+-- =========================
+local ListaNomesDropdown = {}
+local JogadorSelecionadoTP = nil
+local DropdownJogadore
+
+-- =========================
+-- VARIÁVEIS TELEPORTE LOBBY / MAPA
+-- =========================
+local MapaAtual = nil
+local LobbyEncontrado = nil
+
+-- =========================
+-- VARIÁVEIS LOCAL PLAYER
+-- =========================
+local SpeedAtivo = 16
+local JumpAtivo = 50
+local InfJumpAtivo = false
+local NoclipAtivo = false
+
+-- =========================
+-- ABA LOCAL PLAYER: CAMERA
+-- =========================
+local ZoomInifinitoAtivo = false
+local CameraAtravessaParede = false
+local FovValor = 70
+
+-- =========================
+-- VARIÁVEIS DO ESP E CARGOS
+-- =========================
+local HL_Murder = false
+local HL_Xerife = false
+local HL_Heroi = false
+local HL_Inocente = false
+
+local Dist_Murder = false
+local Dist_Xerife = false
+local Dist_Heroi = false
+local Dist_Inocente = false
+
+local Nome_Murder = false
+local Nome_Xerife = false
+local Nome_Heroi = false
+local Nome_Inocente = false
+
+local Linha_Murder = false
+local Linha_Xerife = false
+local Linha_Heroi = false
+local Linha_Inocente = false
+
+local ESP_Arma = false
+
+local UltimoCargos = {}
+local Murder, Sheriff, Hero = nil, nil, nil
+local DadosESP = {}
+local MarcaArmas = {}
+
+-- 🔍 FUNÇÕES DE CHECAGEM
+local function CriarBrilho(Jogador)
+    if not Jogador or not Jogador.Character then return end
+    if not Jogador.Character:FindFirstChild("Highlight") then
+        local hl = Instance.new("Highlight")
+        hl.Name = "Highlight"
+        hl.Adornee = Jogador.Character
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.FillTransparency = 0.5
+        hl.OutlineTransparency = 0
+        hl.Enabled = false
+        hl.Parent = Jogador.Character
+    end
+end
+
+local function EstaVivo(Jogador, listaCargos)
+    if not listaCargos or not listaCargos[Jogador.Name] then return true end
+    local Info = listaCargos[Jogador.Name]
+    return not Info.Killed and not Info.Dead
+end
