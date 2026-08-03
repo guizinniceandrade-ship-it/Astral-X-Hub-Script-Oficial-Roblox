@@ -48,6 +48,18 @@ local Aba_Troll = Window:Tab({Title="Trollagem"})
 
 local Aba_Tele = Window:Tab({Title="Teleporte"})
 
+-- ========================================================
+-- VARIÁVEIS (Shoot, ShootButton e GrabGun)
+-- ========================================================
+local ShootPredictMultiplier = 1.25[span_0](start_span)[span_0](end_span)
+local MagicBullet = false[span_1](start_span)[span_1](end_span)
+local AutoShootEnabled = false[span_2](start_span)[span_2](end_span)
+local AutoGrabGunEnabled = false[span_3](start_span)[span_3](end_span)
+
+local ShootButtonGui = nil[span_4](start_span)[span_4](end_span)
+local isDragging = false[span_5](start_span)[span_5](end_span)
+local dragInputPos, dragStartPos[span_6](start_span)[span_6](end_span)
+
 -- =========================
 -- VARIÁVEIS AUTO FARM (LERP)
 -- =========================
@@ -806,6 +818,47 @@ Sec_Animacao:Button({
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Bac0nHck/Scripts/refs/heads/main/BundleAnimations.lua"))()
         end)
     end
+})
+
+-- ========================================================
+-- ELEMENTOS DE INTERFACE / BOTÕES (UI Astral)
+-- ========================================================
+
+-- Alternar Tiro Automático (Auto Shoot)
+t:AddToggle({
+    Title = 'Auto Shoot Murderer',[span_116](start_span)[span_116](end_span)
+    Description = 'Automatically shoot the murderer',[span_117](start_span)[span_117](end_span)
+    Default = false,[span_118](start_span)[span_118](end_span)
+    Tab = v, -- Substitua 'v' pela sua aba (Tab)[span_119](start_span)[span_119](end_span)
+    Callback = function(state)
+        AutoShootEnabled = state
+    end,
+})
+
+-- Criar/Remover Botão Flutuante (Shoot Button)
+t:AddToggle({
+    Title = 'Auto Shoot Button',[span_120](start_span)[span_120](end_span)
+    Description = 'Creates a draggable button to shoot the murderer',[span_121](start_span)[span_121](end_span)
+    Default = false,[span_122](start_span)[span_122](end_span)
+    Tab = v, -- Substitua 'v' pela sua aba (Tab)[span_123](start_span)[span_123](end_span)
+    Callback = function(state)
+        if state then
+            createShootButton()[span_124](start_span)[span_124](end_span)
+        else
+            removeShootButton()[span_125](start_span)[span_125](end_span)
+        end
+    end,
+})
+
+-- Alternar Coleta Automática de Arma (Auto Grab Gun)
+t:AddToggle({
+    Title = 'Auto Grab Gun',[span_126](start_span)[span_126](end_span)
+    Description = 'Automatically grabbing gun if sheriff died',[span_127](start_span)[span_127](end_span)
+    Default = false,[span_128](start_span)[span_128](end_span)
+    Tab = v, -- Substitua 'v' pela sua aba (Tab)[span_129](start_span)[span_129](end_span)
+    Callback = function(state)
+        AutoGrabGunEnabled = state
+    end,
 })
 
 -- ===================================================
