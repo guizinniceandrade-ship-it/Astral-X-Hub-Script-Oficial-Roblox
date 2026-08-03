@@ -572,3 +572,137 @@ task.spawn(function()
         RunService.Heartbeat:Wait()
     end
 end)
+
+-- ======================
+-- TELEPORTE PLAYER SISTEMA 
+-- ======================
+local function PegarListaJogadores()
+    local lista = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then
+            table.insert(lista, p.Name)
+        end
+    end
+    return lista
+end
+
+local function AtualizarLista()
+    local novaLista = PegarListaJogadores()
+    ListaNomesDropdown = novaLista
+
+    -- Tenta todas as formas que o WindUI aceita
+    pcall(function() DropdownJogadores:SetValues(novaLista) end)
+    pcall(function() DropdownJogadores:Update(novaLista) end)
+    pcall(function() DropdownJogadores:Refresh(novaLista) end)
+
+    -- Apaga a escolha se a pessoa saiu
+    if JogadorSelecionadoTP and not table.find(novaLista, JogadorSelecionadoTP) then
+        JogadorSelecionadoTP = nil
+        pcall(function() DropdownJogadores:SetValue("") end)
+    end
+end
+
+Players.PlayerAdded:Connect(AtualizarLista)
+Players.PlayerRemoving:Connect(AtualizarLista)
+
+-- ========================
+-- TELEPORTE MAPA E LOBBY
+-- ========================
+
+-- Busca o mapa da partida
+local function PegarMapa()
+    for _, v in ipairs(Workspace:GetChildren()) do
+        if v:IsA("Model") then
+            local nome = v.Name:lower()
+            if (v:FindFirstChild("Spawns", true) or v:FindFirstChild("PlayerSpawns", true)) 
+            and not nome:find("lobby") then
+                return v
+            end
+        end
+    end
+end
+
+-- Busca o lobby
+local function PegarLobby()
+    for _, v in ipairs(Workspace:GetChildren()) do
+        if v:IsA("Model") and v.Name:lower():find("lobby") then
+            return v
+        end
+    end
+end
+
+-- Pega um ponto seguro para não ficar preso
+local function PegarPontoSeguro(modelo)
+    if not modelo then return nil end
+    if modelo.PrimaryPart then return modelo.PrimaryPart.CFrame end
+    local parte = modelo:FindFirstChildWhichIsA("BasePart", true)
+    return parte and parte.CFrame or nil
+end
+
+-- Função de teleporte
+local function TeleportarPara(modelo)
+    if not modelo then return end
+    local ponto = PegarPontoSeguro(modelo)
+    local char = player.Character
+    if ponto and char and char:FindFirstChild("HumanoidRootPart") then
+        char:PivotTo(ponto + Vector3.new(0, 4, 0))
+    end
+end
+
+-- =========================
+-- SEÇÃO: FARM / Cframe:Lerp + char:PivotTo
+-- =========================
+local Sec_FarmLerp = Aba_Farm:Section({Title = "Farm / Cframe:Lerp + char:PivotTo"})
+
+Sec_FarmLerp:Toggle({
+    Title = "Ligar Auto Farm",
+    Default = false,
+    Callback = function(s)
+        AutoFarmAtivo = s
+        if not s then 
+            table.clear(collectedCoins) 
+        end
+    end
+})
+
+Sec_FarmLerp:Slider({
+    Title = "Velocidade do Auto Farm",
+    Value = {Min = 10, Max = 40, Default = 22},
+    Callback = function(v) 
+        CONFIG_FARM.velocidade = v 
+    end
+})
+
+-- =========================
+-- ABA TELEPORTE
+-- =========================
+-- Primeiro cria a seção
+local Sec_Teleporte = Aba_Tele:Section({Title = "Teleporte para Player"})
+
+-- Depois cria o dropdown JÁ COM A LISTA CARREGADA
+DropdownJogadores = Sec_Teleporte:Dropdown({
+    Title = "Escolhe alguém",
+    Values = PegarListaJogadores(),
+    Default = "",
+    Callback = function(escolha)
+        JogadorSelecionadoTP = escolha
+    end
+})
+
+-- Por último o botão de teleporte
+Sec_Teleporte:Button({
+    Title = "Teleporte para o Jogador",
+    Callback = function()
+        if not JogadorSelecionadoTP then return end
+        local alvo = Players:FindFirstChild(JogadorSelecionadoTP)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            local eu = player.Character
+            if eu and eu:FindFirstChild("HumanoidRootPart") then
+                eu:PivotTo(alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0))
+            end
+        end
+    end
+})
+
+-- Chama a primeira atualização DEPOIS de tudo criado
+AtualizarLista()
