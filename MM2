@@ -1063,25 +1063,25 @@ Sec_Animacao:Button({
 -- ===================================================
 -- 🎛️ SEÇÕES E TOGGLES DA ABA ESP
 -- ===================================================
-local Sec_HL = Aba_ESP:Section({Title = "HIGHLIGHT"})
+local Sec_HL = Aba_ESP:Section({Title = "Highlight"})
 Sec_HL:Toggle({Title="Highlight murderer", Default=false, Callback=function(s) HL_Murder = s end})
 Sec_HL:Toggle({Title="Highlight xerife", Default=false, Callback=function(s) HL_Xerife = s end})
 Sec_HL:Toggle({Title="Highlight Herói", Default=false, Callback=function(s) HL_Heroi = s end})
 Sec_HL:Toggle({Title="Highlight inocente", Default=false, Callback=function(s) HL_Inocente = s end})
 
-local Sec_Dist = Aba_ESP:Section({Title = "DISTÂNCIA"})
+local Sec_Dist = Aba_ESP:Section({Title = "Distância"})
 Sec_Dist:Toggle({Title="Distância murderer", Default=false, Callback=function(s) Dist_Murder = s end})
 Sec_Dist:Toggle({Title="Distância xerife", Default=false, Callback=function(s) Dist_Xerife = s end})
 Sec_Dist:Toggle({Title="Distância Herói", Default=false, Callback=function(s) Dist_Heroi = s end})
 Sec_Dist:Toggle({Title="Distância inocente", Default=false, Callback=function(s) Dist_Inocente = s end})
 
-local Sec_Nome = Aba_ESP:Section({Title = "NOME"})
+local Sec_Nome = Aba_ESP:Section({Title = "Nome"})
 Sec_Nome:Toggle({Title="Nome murderer", Default=false, Callback=function(s) Nome_Murder = s end})
 Sec_Nome:Toggle({Title="Nome xerife", Default=false, Callback=function(s) Nome_Xerife = s end})
 Sec_Nome:Toggle({Title="Nome Herói", Default=false, Callback=function(s) Nome_Heroi = s end})
 Sec_Nome:Toggle({Title="Nome inocente", Default=false, Callback=function(s) Nome_Inocente = s end})
 
-local Sec_Linha = Aba_ESP:Section({Title = "LINHA"})
+local Sec_Linha = Aba_ESP:Section({Title = "Linha"})
 Sec_Linha:Toggle({Title="Linha murderer", Default=false, Callback=function(s) Linha_Murder = s end})
 Sec_Linha:Toggle({Title="Linha xerife", Default=false, Callback=function(s) Linha_Xerife = s end})
 Sec_Linha:Toggle({Title="Linha Herói", Default=false, Callback=function(s) Linha_Heroi = s end})
@@ -1111,7 +1111,7 @@ Sec_Tiro:Toggle({
     end
 })
 
-Sec_Tiro:Toggle({
+Sec_TROCADO:Toggle({
     Title = "Magic Bullet",
     Default = false,
     Callback = function(State) MagicBullet = State end
