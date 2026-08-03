@@ -102,6 +102,117 @@ local function PegarEstiloCargo(Jogador)
     end
 end
 
+-- ===================================================
+-- 🔄 ATUALIZAÇÃO GERAL DO ESP (JOGADORES E ARMAS EM TEMPO REAL)
+-- ===================================================
+RunService.RenderStepped:Connect(function()
+    local Cam = Workspace.CurrentCamera
+    local BaseTela = Vector2.new(Cam.ViewportSize.X/2, Cam.ViewportSize.Y)
+
+    -- ESP DE JOGADORES
+    for _, J in pairs(Players:GetPlayers()) do
+        local valido = J ~= player and J.Character and J.Character:FindFirstChild("HumanoidRootPart")
+
+        if not valido then
+            if J.Character and J.Character:FindFirstChild("Highlight") then
+                J.Character.Highlight.Enabled = false
+            end
+            if DadosESP[J] then
+                if DadosESP[J].Dist then DadosESP[J].Dist.Visible = false end
+                if DadosESP[J].Nome then DadosESP[J].Nome.Visible = false end
+                if DadosESP[J].Linha then DadosESP[J].Linha.Visible = false end
+            end
+            continue
+        end
+
+        CriarBrilho(J)
+        local hl = J.Character:FindFirstChild("Highlight")
+        local Cor, aHL, aDist, aNome, aLinha = PegarEstiloCargo(J)
+
+        if not DadosESP[J] then
+            DadosESP[J] = {
+                Dist = Drawing.new("Text"),
+                Nome = Drawing.new("Text"),
+                Linha = Drawing.new("Line")
+            }
+            local d = DadosESP[J]
+            d.Dist.Center = true; d.Dist.Outline = true; d.Dist.Font = 2; d.Dist.Size = 11
+            d.Nome.Center = true; d.Nome.Outline = true; d.Nome.Font = 2; d.Nome.Size = 13
+            d.Linha.Thickness = 1
+        end
+
+        local d = DadosESP[J]
+        local HRP = J.Character.PrimaryPart
+        local Cabeca = J.Character:FindFirstChild("Head") or HRP
+        local PosC, VisC = Cam:WorldToViewportPoint(Cabeca.Position + Vector3.new(0,0.6,0))
+        local PosP, VisP = Cam:WorldToViewportPoint(HRP.Position)
+        local Dist = math.floor((Cam.CFrame.Position - HRP.Position).Magnitude + 0.5)
+
+        if hl then
+            hl.FillColor = Cor
+            hl.OutlineColor = Color3.fromRGB(math.clamp(Cor.R*255+30,0,255), math.clamp(Cor.G*255+30,0,255), math.clamp(Cor.B*255+30,0,255))
+            hl.Enabled = aHL
+        end
+
+        if aDist and VisP then
+            d.Dist.Text = Dist.."m"
+            d.Dist.Color = Cor
+            d.Dist.Position = Vector2.new(PosP.X, PosP.Y + 12)
+            d.Dist.Visible = true
+        else
+            d.Dist.Visible = false
+        end
+
+        if aNome and VisC then
+            d.Nome.Text = J.Name
+            d.Nome.Color = Cor
+            d.Nome.Position = Vector2.new(PosC.X, PosC.Y - 12)
+            d.Nome.Visible = true
+        else
+            d.Nome.Visible = false
+        end
+
+        if aLinha and VisP then
+            d.Linha.From = BaseTela
+            d.Linha.To = Vector2.new(PosP.X, PosP.Y)
+            d.Linha.Color = Cor
+            d.Linha.Visible = true
+        else
+            d.Linha.Visible = false
+        end
+    end
+
+    -- Limpeza de jogadores desconectados
+    for J, d in pairs(DadosESP) do
+        if not J:IsDescendantOf(Players) then
+            if d.Dist then d.Dist:Remove() end
+            if d.Nome then d.Nome:Remove() end
+            if d.Linha then d.Linha:Remove() end
+            DadosESP[J] = nil
+        end
+    end
+
+    -- ESP DE ARMAS (EXECUTADO AQUI PARA A LINHA NÃO TRAVAR AO MOVER A TELA)
+    if ESP_Arma then
+        for obj, dados in pairs(MarcaArmas) do
+            if dados and dados.Parte and dados.Linha then
+                local PosP, VisP = Cam:WorldToViewportPoint(dados.Parte.Position)
+                if VisP then
+                    dados.Linha.From = BaseTela
+                    dados.Linha.To = Vector2.new(PosP.X, PosP.Y)
+                    dados.Linha.Visible = true
+                else
+                    dados.Linha.Visible = false
+                end
+            end
+        end
+    else
+        for _, dados in pairs(MarcaArmas) do
+            if dados.Linha then dados.Linha.Visible = false end
+        end
+    end
+end)
+
 
 -- =================================================
 -- SISTEMAS DA ABA LOCAL PLAYER
