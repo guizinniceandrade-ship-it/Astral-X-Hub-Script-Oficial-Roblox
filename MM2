@@ -866,9 +866,19 @@ Players.PlayerAdded:Connect(AtualizarLista)
 Players.PlayerRemoving:Connect(AtualizarLista)
 
 
--- ===========================
--- 🔄 FUNÇÃO PRINCIPAL SKIDFLING (OTIMIZADA)
--- ===========================
+-- ===============================================
+-- 🌀 SISTEMA DE FLING COMPLETO E CORRIGIDO
+-- ===============================================
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+getgenv().PosicaoOriginal = nil
+getgenv().AlturaQueda = Workspace.FallenPartsDestroyHeight
+local ListaFling = {}
+
+-- 🔄 FUNÇÃO PRINCIPAL SKIDFLING (SEM DELAY E SEM MORTE)
 local function SkidFling(JogadorAlvo)
     if not JogadorAlvo or not JogadorAlvo.Character then return end
 
@@ -901,53 +911,55 @@ local function SkidFling(JogadorAlvo)
         if AlvoHumanoide and AlvoHumanoide.Sit then return end
 
         -- Câmera no alvo
-        workspace.CurrentCamera.CameraSubject = AlvoCabeca or AlvoPega or AlvoRaiz
+        Workspace.CurrentCamera.CameraSubject = AlvoCabeca or AlvoPega or AlvoRaiz
 
         local AplicarForca = function(ParteAlvo, Angulo, Desvio)
             MinhaRaiz.CFrame = CFrame.new(ParteAlvo.Position) * Angulo * Desvio
             MeuPersonagem:SetPrimaryPartCFrame(CFrame.new(ParteAlvo.Position) * Angulo * Desvio)
-            MinhaRaiz.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-            MinhaRaiz.RotVelocity = Vector3.new(9e8,9e8,9e8)
+            MinhaRaiz.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+            MinhaRaiz.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
         end
 
         local IniciarFling = function(ParteAlvo)
-            local TempoTotal, Inicio, Giro = 1.2, tick(), 0 -- Reduzido tempo total para evitar bugs do Void
+            local TempoTotal, Inicio, Giro = 1.2, tick(), 0 -- Ajustado para 1.2s para evitar mortes por cair no Void
             repeat
                 if MinhaRaiz and AlvoHumanoide then
                     if ParteAlvo.Velocity.Magnitude < 50 then
                         Giro += 100
-                        AplicarForca(ParteAlvo, CFrame.new(0,1.5,0) + AlvoHumanoide.MoveDirection * ParteAlvo.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(Giro),0,0))
+                        AplicarForca(ParteAlvo, CFrame.new(0, 1.5, 0) + AlvoHumanoide.MoveDirection * ParteAlvo.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Giro), 0, 0))
                         task.wait()
-                        AplicarForca(ParteAlvo, CFrame.new(0,-1.5,0) + AlvoHumanoide.MoveDirection * ParteAlvo.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(Giro),0,0))
+                        AplicarForca(ParteAlvo, CFrame.new(0, -1.5, 0) + AlvoHumanoide.MoveDirection * ParteAlvo.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Giro), 0, 0))
                         task.wait()
                     else
-                        AplicarForca(ParteAlvo, CFrame.new(0,1.5,AlvoHumanoide.WalkSpeed), CFrame.Angles(math.rad(90),0,0))
+                        AplicarForca(ParteAlvo, CFrame.new(0, 1.5, AlvoHumanoide.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
                         task.wait()
-                        AplicarForca(ParteAlvo, CFrame.new(0,-1.5,-AlvoHumanoide.WalkSpeed), CFrame.new())
+                        AplicarForca(ParteAlvo, CFrame.new(0, -1.5, -AlvoHumanoide.WalkSpeed), CFrame.new())
                         task.wait()
                     end
                 end
             until tick() > Inicio + TempoTotal
         end
 
-        -- Execução
-        workspace.FallenPartsDestroyHeight = math.huge
+        -- Desativa destruição por altura temporariamente
+        Workspace.FallenPartsDestroyHeight = math.huge
+        
         local ForcaCorpo = Instance.new("BodyVelocity")
-        ForcaCorpo.MaxForce = Vector3.new(9e9,9e9,9e9)
+        ForcaCorpo.MaxForce = Vector3.new(9e9, 9e9, 9e9)
         ForcaCorpo.Velocity = Vector3.new()
         ForcaCorpo.Parent = MinhaRaiz
         MeuHumanoide:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
 
+        -- Execução
         if AlvoRaiz then IniciarFling(AlvoRaiz)
         elseif AlvoCabeca then IniciarFling(AlvoCabeca)
         elseif AlvoPega then IniciarFling(AlvoPega) end
 
-        -- RESTAURAÇÃO DE SEGURANÇA DA FÍSICA
+        -- Restauração da Física e Câmera
         ForcaCorpo:Destroy()
         MeuHumanoide:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-        workspace.CurrentCamera.CameraSubject = MeuHumanoide
+        Workspace.CurrentCamera.CameraSubject = MeuHumanoide
 
-        -- ZERA VELOCIDADE IMEDIATAMENTE PARA NÃO MORRER
+        -- Zera a velocidade remanescente no boneco (Impede ser jogado pro mapa/Void)
         for _, p in pairs(MeuPersonagem:GetChildren()) do
             if p:IsA("BasePart") then 
                 p.Velocity = Vector3.new(0, 0, 0)
@@ -955,24 +967,50 @@ local function SkidFling(JogadorAlvo)
             end
         end
 
-        -- VOLTA RÁPIDO PARA A POSIÇÃO ORIGINAL COM TIMEOUT
+        -- Retorno com Limite de Tempo (Cancela o delay pesado se falhar)
         if getgenv().PosicaoOriginal then
             local TempoRetorno = tick()
             repeat
-                MinhaRaiz.CFrame = getgenv().PosicaoOriginal * CFrame.new(0,0.5,0)
-                MeuPersonagem:SetPrimaryPartCFrame(getgenv().PosicaoOriginal * CFrame.new(0,0.5,0))
+                MinhaRaiz.CFrame = getgenv().PosicaoOriginal * CFrame.new(0, 0.5, 0)
+                MeuPersonagem:SetPrimaryPartCFrame(getgenv().PosicaoOriginal * CFrame.new(0, 0.5, 0))
                 MeuHumanoide:ChangeState(Enum.HumanoidStateType.GettingUp)
                 for _, p in pairs(MeuPersonagem:GetChildren()) do
                     if p:IsA("BasePart") then p.Velocity, p.RotVelocity = Vector3.new(), Vector3.new() end
                 end
                 task.wait()
-            -- Sai se chegar perto OU se passar mais de 1 segundo (Evita o delay travado)
             until (MinhaRaiz.Position - getgenv().PosicaoOriginal.Position).Magnitude < 10 or (tick() - TempoRetorno) > 1
             
-            workspace.FallenPartsDestroyHeight = getgenv().AlturaQueda
+            Workspace.FallenPartsDestroyHeight = getgenv().AlturaQueda
         end
     end
 end
+
+-- 👥 ATUALIZAÇÃO DA LISTA DE JOGADORES
+local function AtualizarListaFling()
+    table.clear(ListaFling)
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then 
+            table.insert(ListaFling, p.Name) 
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(AtualizarListaFling)
+Players.PlayerRemoving:Connect(AtualizarListaFling)
+AtualizarListaFling()
+
+-- Loop de sincronização com o Dropdown da Interface
+task.spawn(function()
+    while true do
+        task.wait(2)
+        AtualizarListaFling()
+        pcall(function()
+            if DropdownFling then
+                DropdownFling:SetValues(ListaFling)
+            end
+        end)
+    end
+end)
 
 -- ========================
 -- TELEPORTE MAPA E LOBBY
