@@ -60,6 +60,17 @@ local ShootButtonGui = nil[span_4](start_span)[span_4](end_span)
 local isDragging = false[span_5](start_span)[span_5](end_span)
 local dragInputPos, dragStartPos[span_6](start_span)[span_6](end_span)
 
+-- ========================
+-- ⚙️ VARIÁVEIS DO XERIFE
+-- ========================
+local AutoTiroAssassino = false
+local BotaoTiroVisivel = false
+local MagicBullet = false
+local PegarArmaAuto = false
+local BotaoTiro = nil
+local SegurandoBotao = false
+local PosicaoOriginal, ToqueInicial
+
 -- =========================
 -- VARIÁVEIS AUTO FARM (LERP)
 -- =========================
@@ -618,209 +629,9 @@ Players.PlayerAdded:Connect(AtualizarLista)
 Players.PlayerRemoving:Connect(AtualizarLista)
 
 -- ========================================================
--- SISTEMA / FUNÇÕES AUXILIARES
+-- SISTEMA / XERIFE 
 -- ========================================================
 
--- Obter Ping do jogador
-local function getPing()
-    local Stats = game:GetService("Stats")[span_7](start_span)[span_7](end_span)
-    return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()[span_8](start_span)[span_8](end_span)
-end
-
--- Encontrar o Murderer no mapa
-local function findMurderer()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")[span_9](start_span)[span_9](end_span)
-    local Players = game:GetService("Players")[span_10](start_span)[span_10](end_span)
-    local getPlayerData = ReplicatedStorage:FindFirstChild("GetPlayerData", true)[span_11](start_span)[span_11](end_span)
-
-    if not getPlayerData then return nil end[span_12](start_span)[span_12](end_span)
-
-    local success, data = pcall(function()
-        return getPlayerData:InvokeServer()[span_13](start_span)[span_13](end_span)
-    end)
-
-    if not success or not data then return nil end[span_14](start_span)[span_14](end_span)
-
-    for _, player in ipairs(Players:GetPlayers()) do[span_15](start_span)[span_15](end_span)
-        if player ~= Players.LocalPlayer and player:GetAttribute("Alive") == true then[span_16](start_span)[span_16](end_span)
-            local playerData = data[player.Name][span_17](start_span)[span_17](end_span)
-            if playerData and playerData.Role == "Murderer" then[span_18](start_span)[span_18](end_span)
-                return player[span_19](start_span)[span_19](end_span)
-            end
-        end
-    end
-    return nil[span_20](start_span)[span_20](end_span)
-end
-
--- Encontrar o Mapa Atual
-local function findMap()
-    for _, obj in pairs(workspace:GetChildren()) do[span_21](start_span)[span_21](end_span)
-        if obj:GetAttribute("MapID") then[span_22](start_span)[span_22](end_span)
-            return obj[span_23](start_span)[span_23](end_span)
-        end
-    end
-    return nil
-end
-
--- Lógica de Disparo (Shoot)
-local function shootMurderer()
-    local LocalPlayer = game:GetService("Players").LocalPlayer[span_24](start_span)[span_24](end_span)
-    local gun = nil[span_25](start_span)[span_25](end_span)
-
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun") then[span_26](start_span)[span_26](end_span)
-        gun = LocalPlayer.Character.Gun[span_27](start_span)[span_27](end_span)
-    elseif LocalPlayer.Backpack and LocalPlayer.Backpack:FindFirstChild("Gun") then[span_28](start_span)[span_28](end_span)
-        gun = LocalPlayer.Backpack.Gun[span_29](start_span)[span_29](end_span)
-        gun.Parent = LocalPlayer.Character[span_30](start_span)[span_30](end_span)
-    end
-
-    if not gun then return false end[span_31](start_span)[span_31](end_span)
-
-    local murderer = findMurderer()[span_32](start_span)[span_32](end_span)
-    if not murderer then return false end[span_33](start_span)[span_33](end_span)
-
-    local murdererChar = murderer.Character[span_34](start_span)[span_34](end_span)
-    if not murdererChar or not murdererChar:FindFirstChild("HumanoidRootPart") then return false end[span_35](start_span)[span_35](end_span)
-
-    local targetHRP = murdererChar.HumanoidRootPart[span_36](start_span)[span_36](end_span)
-    local targetTorso = murdererChar:FindFirstChild("Torso") or murdererChar:FindFirstChild("UpperTorso")[span_37](start_span)[span_37](end_span)
-    local targetHumanoid = murdererChar:FindFirstChild("Humanoid")[span_38](start_span)[span_38](end_span)
-
-    if not targetTorso or not targetHumanoid or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then[span_39](start_span)[span_39](end_span)
-        return false[span_40](start_span)[span_40](end_span)
-    end
-
-    local myHRP = LocalPlayer.Character.HumanoidRootPart[span_41](start_span)[span_41](end_span)
-    local ping = getPing()[span_42](start_span)[span_42](end_span)
-    local predictionTime = (ping / 1000) * ShootPredictMultiplier[span_43](start_span)[span_43](end_span)
-    local velocity = targetHRP.Velocity[span_44](start_span)[span_44](end_span)
-    local predictedPos[span_45](start_span)[span_45](end_span)
-
-    if velocity.Magnitude < 1 then[span_46](start_span)[span_46](end_span)
-        predictedPos = targetTorso.Position[span_47](start_span)[span_47](end_span)
-    else
-        predictedPos = targetTorso.Position + (velocity * predictionTime)[span_48](start_span)[span_48](end_span)
-    end
-
-    local originCFrame[span_49](start_span)[span_49](end_span)
-    if MagicBullet then[span_50](start_span)[span_50](end_span)
-        originCFrame = CFrame.new(targetTorso.Position, predictedPos)[span_51](start_span)[span_51](end_span)
-    else
-        originCFrame = CFrame.new(myHRP.Position, predictedPos)[span_52](start_span)[span_52](end_span)
-    end
-
-    local targetCFrame = CFrame.new(predictedPos)[span_53](start_span)[span_53](end_span)
-    local shootEvent = gun:FindFirstChild("ShootEvent") or gun:FindFirstChild("Shoot")[span_54](start_span)[span_54](end_span)
-
-    if shootEvent then[span_55](start_span)[span_55](end_span)
-        shootEvent:FireServer(originCFrame, targetCFrame)[span_56](start_span)[span_56](end_span)
-        return true[span_57](start_span)[span_57](end_span)
-    end
-
-    return false[span_58](start_span)[span_58](end_span)
-end
-
--- Criar Botão Flutuante (ShootButton)
-local function createShootButton()
-    if ShootButtonGui then return end[span_59](start_span)[span_59](end_span)
-
-    local CoreGui = game:GetService("CoreGui")[span_60](start_span)[span_60](end_span)
-    local screenGui = Instance.new("ScreenGui")[span_61](start_span)[span_61](end_span)
-    screenGui.Name = "ShootButtonGui[span_62](start_span)"[span_62](end_span)
-    screenGui.ResetOnSpawn = false[span_63](start_span)[span_63](end_span)
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling[span_64](start_span)[span_64](end_span)
-    screenGui.Parent = CoreGui[span_65](start_span)[span_65](end_span)
-
-    local button = Instance.new("ImageButton")[span_66](start_span)[span_66](end_span)
-    button.Name = "ShootButton[span_67](start_span)"[span_67](end_span)
-    button.Size = UDim2.new(0, 80, 0, 80)[span_68](start_span)[span_68](end_span)
-    button.Position = UDim2.new(0.5, -40, 0.5, -40)[span_69](start_span)[span_69](end_span)
-    button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)[span_70](start_span)[span_70](end_span)
-    button.BackgroundTransparency = 0.3[span_71](start_span)[span_71](end_span)
-    button.BorderSizePixel = 0[span_72](start_span)[span_72](end_span)
-    button.Parent = screenGui[span_73](start_span)[span_73](end_span)
-
-    local corner = Instance.new("UICorner")[span_74](start_span)[span_74](end_span)
-    corner.CornerRadius = UDim.new(1, 0)[span_75](start_span)[span_75](end_span)
-    corner.Parent = button[span_76](start_span)[span_76](end_span)
-
-    local label = Instance.new("TextLabel")[span_77](start_span)[span_77](end_span)
-    label.Size = UDim2.new(1, 0, 1, 0)[span_78](start_span)[span_78](end_span)
-    label.BackgroundTransparency = 1[span_79](start_span)[span_79](end_span)
-    label.Text = "🔫[span_80](start_span)"[span_80](end_span)
-    label.TextSize = 32[span_81](start_span)[span_81](end_span)
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)[span_82](start_span)[span_82](end_span)
-    label.Font = Enum.Font.GothamBold[span_83](start_span)[span_83](end_span)
-    label.Parent = button[span_84](start_span)[span_84](end_span)
-
-    button.InputBegan:Connect(function(input)[span_85](start_span)[span_85](end_span)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then[span_86](start_span)[span_86](end_span)
-            isDragging = true[span_87](start_span)[span_87](end_span)
-            dragInputPos = input.Position[span_88](start_span)[span_88](end_span)
-            dragStartPos = button.Position[span_89](start_span)[span_89](end_span)
-
-            input.Changed:Connect(function()[span_90](start_span)[span_90](end_span)
-                if input.UserInputState == Enum.UserInputState.End then[span_91](start_span)[span_91](end_span)
-                    isDragging = false[span_92](start_span)[span_92](end_span)
-                end
-            end)
-        end
-    end)
-
-    button.InputChanged:Connect(function(input)[span_93](start_span)[span_93](end_span)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then[span_94](start_span)[span_94](end_span)
-            if isDragging then[span_95](start_span)[span_95](end_span)
-                local delta = input.Position - dragInputPos[span_96](start_span)[span_96](end_span)
-                button.Position = UDim2.new(dragStartPos.X.Scale, dragStartPos.X.Offset + delta.X, dragStartPos.Y.Scale, dragStartPos.Y.Offset + delta.Y)[span_97](start_span)[span_97](end_span)
-            end
-        end
-    end)
-
-    button.MouseButton1Click:Connect(function()[span_98](start_span)[span_98](end_span)
-        if not isDragging then[span_99](start_span)[span_99](end_span)
-            shootMurderer()[span_100](start_span)[span_100](end_span)
-        end
-    end)
-
-    ShootButtonGui = screenGui[span_101](start_span)[span_101](end_span)
-end
-
--- Remover Botão Flutuante
-local function removeShootButton()
-    if ShootButtonGui then[span_102](start_span)[span_102](end_span)
-        ShootButtonGui:Destroy()[span_103](start_span)[span_103](end_span)
-        ShootButtonGui = nil[span_104](start_span)[span_104](end_span)
-    end
-end
-
--- Lógica de Puxar Arma (GrabGun)
-local function getGun()
-    pcall(function()
-        local LocalPlayer = game:GetService("Players").LocalPlayer[span_105](start_span)[span_105](end_span)
-        if not AutoGrabGunEnabled then return end[span_106](start_span)[span_106](end_span)
-        if not LocalPlayer:GetAttribute("Alive") then return end[span_107](start_span)[span_107](end_span)
-
-        local currentMap = findMap()[span_108](start_span)[span_108](end_span)
-        if not currentMap then return end[span_109](start_span)[span_109](end_span)
-
-        if currentMap:FindFirstChild("GunDrop") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then[span_110](start_span)[span_110](end_span)
-            currentMap:FindFirstChild("GunDrop").CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame[span_111](start_span)[span_111](end_span)
-        end
-    end)
-end
-
--- Loop de disparo automático e coleta de arma
-task.spawn(function()
-    while true do
-        task.wait(0.1)[span_112](start_span)[span_112](end_span)
-        if AutoShootEnabled then[span_113](start_span)[span_113](end_span)
-            shootMurderer()[span_114](start_span)[span_114](end_span)
-        end
-        if AutoGrabGunEnabled then
-            getGun()[span_115](start_span)[span_115](end_span)
-        end
-    end
-end)
 
 -- ========================
 -- TELEPORTE MAPA E LOBBY
@@ -1029,41 +840,46 @@ Sec_Animacao:Button({
 -- ELEMENTOS DE INTERFACE / BOTÕES (UI Astral)
 -- ========================================================
 
--- Alternar Tiro Automático (Auto Shoot)
-t:AddToggle({
-    Title = 'Auto Shoot Murderer',[span_116](start_span)[span_116](end_span)
-    Description = 'Automatically shoot the murderer',[span_117](start_span)[span_117](end_span)
-    Default = false,[span_118](start_span)[span_118](end_span)
-    Tab = v, -- Substitua 'v' pela sua aba (Tab)[span_119](start_span)[span_119](end_span)
-    Callback = function(state)
-        AutoShootEnabled = state
-    end,
+-- =========================
+-- 🔫 ABA XERIFE → SEÇÃO TIRO
+-- =========================
+local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
+
+Sec_Tiro:Toggle({
+    Title = "🔁 Auto Shoot Murderer",
+    Description = "Atira automaticamente no assassino",
+    Default = false,
+    Callback = function(Estado)
+        AutoTiroAssassino = Estado
+    end
 })
 
--- Criar/Remover Botão Flutuante (Shoot Button)
-t:AddToggle({
-    Title = 'Auto Shoot Button',[span_120](start_span)[span_120](end_span)
-    Description = 'Creates a draggable button to shoot the murderer',[span_121](start_span)[span_121](end_span)
-    Default = false,[span_122](start_span)[span_122](end_span)
-    Tab = v, -- Substitua 'v' pela sua aba (Tab)[span_123](start_span)[span_123](end_span)
-    Callback = function(state)
-        if state then
-            createShootButton()[span_124](start_span)[span_124](end_span)
-        else
-            removeShootButton()[span_125](start_span)[span_125](end_span)
-        end
-    end,
+Sec_Tiro:Toggle({
+    Title = "🎯 Auto Shoot Button",
+    Description = "Mostra botão arrastável de tiro",
+    Default = false,
+    Callback = function(Estado)
+        BotaoTiroVisivel = Estado
+        if Estado then CriarBotaoTiro() else RemoverBotaoTiro() end
+    end
 })
 
--- Alternar Coleta Automática de Arma (Auto Grab Gun)
-t:AddToggle({
-    Title = 'Auto Grab Gun',[span_126](start_span)[span_126](end_span)
-    Description = 'Automatically grabbing gun if sheriff died',[span_127](start_span)[span_127](end_span)
-    Default = false,[span_128](start_span)[span_128](end_span)
-    Tab = v, -- Substitua 'v' pela sua aba (Tab)[span_129](start_span)[span_129](end_span)
-    Callback = function(state)
-        AutoGrabGunEnabled = state
-    end,
+Sec_Tiro:Toggle({
+    Title = "✨ Magic Bullet",
+    Description = "Mira direto no assassino",
+    Default = false,
+    Callback = function(Estado)
+        MagicBullet = Estado
+    end
+})
+
+Sec_Tiro:Toggle({
+    Title = "🔫 Auto Grab Gun",
+    Description = "Pega arma automaticamente se xerife morrer",
+    Default = false,
+    Callback = function(Estado)
+        PegarArmaAuto = Estado
+    end
 })
 
 -- ===================================================
