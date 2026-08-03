@@ -137,3 +137,182 @@ local function EstaVivo(Jogador, listaCargos)
     local Info = listaCargos[Jogador.Name]
     return not Info.Killed and not Info.Dead
 end
+
+-- ===================================================
+-- 📥 LEITURA SEGURA DE CARGOS
+-- ===================================================
+task.spawn(function()
+    while true do
+        local PegarDados = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+        if PegarDados then
+            local ok, res = pcall(function() return PegarDados:InvokeServer() end)
+            if ok and type(res) == "table" then
+                local novoMurder, novoSheriff, novoHero = nil, nil, nil
+                for Nome,DadosJogador in pairs(res) do
+                    if type(DadosJogador) == "table" then
+                        if DadosJogador.Role == "Murderer" then novoMurder = Nome
+                        elseif DadosJogador.Role == "Sheriff" then novoSheriff = Nome
+                        elseif DadosJogador.Role == "Hero" then novoHero = Nome end
+                    end
+                end
+
+                if novoMurder then Murder = novoMurder end
+                if novoSheriff then Sheriff = novoSheriff end
+                if novoHero then Hero = novoHero end
+
+                UltimoCargos = res
+            end
+        end
+        task.wait(0.3)
+    end
+end)
+
+-- ===================================================
+-- 🎨 SELETOR DE COR E ATIVAÇÕES — CORRIGIDO
+-- ===================================================
+local function PegarEstiloCargo(Jogador)
+    local rodadaAtiva = false
+    if UltimoCargos and type(UltimoCargos) == "table" then
+        for _, dados in pairs(UltimoCargos) do
+            if type(dados) == "table" and (dados.Role == "Murderer" or dados.Role == "Sheriff") then
+                rodadaAtiva = true
+                break
+            end
+        end
+    end
+
+    if not rodadaAtiva then
+        return Color3.fromRGB(50, 255, 50), HL_Inocente, Dist_Inocente, Nome_Inocente, Linha_Inocente
+    end
+
+    local vivo = EstaVivo(Jogador, UltimoCargos)
+    local xerifeMorto = false
+    if Sheriff then
+        local XerifePlayer = Players:FindFirstChild(Sheriff)
+        if XerifePlayer and not EstaVivo(XerifePlayer, UltimoCargos) then
+            xerifeMorto = true
+        end
+    end
+
+    if Jogador.Name == Murder and vivo then
+        return Color3.fromRGB(255, 40, 40), HL_Murder, Dist_Murder, Nome_Murder, Linha_Murder
+    elseif Jogador.Name == Sheriff and vivo then
+        return Color3.fromRGB(40, 120, 255), HL_Xerife, Dist_Xerife, Nome_Xerife, Linha_Xerife
+    -- ✅ AQUI ESTAVA O ERRO: AGORA SÓ MARCA SE HERO EXISTIR E FOR ELE
+    elseif Hero and Jogador.Name == Hero and vivo and xerifeMorto then
+        return Color3.fromRGB(255, 215, 0), HL_Heroi, Dist_Heroi, Nome_Heroi, Linha_Heroi
+    else
+        return Color3.fromRGB(50, 255, 50), HL_Inocente, Dist_Inocente, Nome_Inocente, Linha_Inocente
+    end
+end
+
+-- ===================================================
+-- 🔄 ATUALIZAÇÃO GERAL DO ESP (JOGADORES E ARMAS EM TEMPO REAL)
+-- ===================================================
+RunService.RenderStepped:Connect(function()
+    local Cam = Workspace.CurrentCamera
+    local BaseTela = Vector2.new(Cam.ViewportSize.X/2, Cam.ViewportSize.Y)
+
+    -- ESP DE JOGADORES
+    for _, J in pairs(Players:GetPlayers()) do
+        local valido = J ~= player and J.Character and J.Character:FindFirstChild("HumanoidRootPart")
+
+        if not valido then
+            if J.Character and J.Character:FindFirstChild("Highlight") then
+                J.Character.Highlight.Enabled = false
+            end
+            if DadosESP[J] then
+                if DadosESP[J].Dist then DadosESP[J].Dist.Visible = false end
+                if DadosESP[J].Nome then DadosESP[J].Nome.Visible = false end
+                if DadosESP[J].Linha then DadosESP[J].Linha.Visible = false end
+            end
+            continue
+        end
+
+        CriarBrilho(J)
+        local hl = J.Character:FindFirstChild("Highlight")
+        local Cor, aHL, aDist, aNome, aLinha = PegarEstiloCargo(J)
+
+        if not DadosESP[J] then
+            DadosESP[J] = {
+                Dist = Drawing.new("Text"),
+                Nome = Drawing.new("Text"),
+                Linha = Drawing.new("Line")
+            }
+            local d = DadosESP[J]
+            d.Dist.Center = true; d.Dist.Outline = true; d.Dist.Font = 2; d.Dist.Size = 11
+            d.Nome.Center = true; d.Nome.Outline = true; d.Nome.Font = 2; d.Nome.Size = 13
+            d.Linha.Thickness = 1
+        end
+
+        local d = DadosESP[J]
+        local HRP = J.Character.PrimaryPart
+        local Cabeca = J.Character:FindFirstChild("Head") or HRP
+        local PosC, VisC = Cam:WorldToViewportPoint(Cabeca.Position + Vector3.new(0,0.6,0))
+        local PosP, VisP = Cam:WorldToViewportPoint(HRP.Position)
+        local Dist = math.floor((Cam.CFrame.Position - HRP.Position).Magnitude + 0.5)
+
+        if hl then
+            hl.FillColor = Cor
+            hl.OutlineColor = Color3.fromRGB(math.clamp(Cor.R*255+30,0,255), math.clamp(Cor.G*255+30,0,255), math.clamp(Cor.B*255+30,0,255))
+            hl.Enabled = aHL
+        end
+
+        if aDist and VisP then
+            d.Dist.Text = Dist.."m"
+            d.Dist.Color = Cor
+            d.Dist.Position = Vector2.new(PosP.X, PosP.Y + 12)
+            d.Dist.Visible = true
+        else
+            d.Dist.Visible = false
+        end
+
+        if aNome and VisC then
+            d.Nome.Text = J.Name
+            d.Nome.Color = Cor
+            d.Nome.Position = Vector2.new(PosC.X, PosC.Y - 12)
+            d.Nome.Visible = true
+        else
+            d.Nome.Visible = false
+        end
+
+        if aLinha and VisP then
+            d.Linha.From = BaseTela
+            d.Linha.To = Vector2.new(PosP.X, PosP.Y)
+            d.Linha.Color = Cor
+            d.Linha.Visible = true
+        else
+            d.Linha.Visible = false
+        end
+    end
+
+    -- Limpeza de jogadores desconectados
+    for J, d in pairs(DadosESP) do
+        if not J:IsDescendantOf(Players) then
+            if d.Dist then d.Dist:Remove() end
+            if d.Nome then d.Nome:Remove() end
+            if d.Linha then d.Linha:Remove() end
+            DadosESP[J] = nil
+        end
+    end
+
+    -- ESP DE ARMAS (EXECUTADO AQUI PARA A LINHA NÃO TRAVAR AO MOVER A TELA)
+    if ESP_Arma then
+        for obj, dados in pairs(MarcaArmas) do
+            if dados and dados.Parte and dados.Linha then
+                local PosP, VisP = Cam:WorldToViewportPoint(dados.Parte.Position)
+                if VisP then
+                    dados.Linha.From = BaseTela
+                    dados.Linha.To = Vector2.new(PosP.X, PosP.Y)
+                    dados.Linha.Visible = true
+                else
+                    dados.Linha.Visible = false
+                end
+            end
+        end
+    else
+        for _, dados in pairs(MarcaArmas) do
+            if dados.Linha then dados.Linha.Visible = false end
+        end
+    end
+end)
