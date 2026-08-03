@@ -1,0 +1,48 @@
+-- ===========================================
+-- ASTRAL X HUB · ESTRUTURA LIMPA
+-- ===========================================
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+local player = Players.LocalPlayer
+
+-- 🛡️ PROTEÇÃO
+local NomeJanela = "ASTRAL X Hub"
+if game.CoreGui:FindFirstChild(NomeJanela) then game.CoreGui[NomeJanela]:Destroy() end
+if player.PlayerGui:FindFirstChild(NomeJanela) then player.PlayerGui[NomeJanela]:Destroy() end
+for _, pasta in pairs(game.CoreGui:GetChildren()) do
+    if pasta.Name == "AstralX" then pasta:Destroy() end
+end
+
+-- ===========================================
+-- INTERFACE PRINCIPAL
+-- ===========================================
+local Window = WindUI:CreateWindow({
+    Title = "ASTRAL X Hub",
+    Folder = "AstralX",
+    Size = UDim2.fromOffset(580,460),
+    MinSize = Vector2.new(560,350),
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    HideSearchBar = true
+})
+
+-- =========================
+-- ABAS NA ORDEM CERTA
+-- =========================
+local Aba_Assassino = Window:Tab({Title="Assassino"})
+local Aba_Xerife = Window:Tab({Title="Xerife"})
+local Aba_ESP = Window:Tab({Title="ESP"})
+local Aba_AutoFarm = Window:Tab({Title="Auto Farm"})
+local Aba_Local = Window:Tab({Title="Local Player"})
+local Aba_Trollagem = Window:Tab({Title="Trollagem"})
+local Aba_Teleporte = Window:Tab({Title="Teleporte"})
+
+-- ===========================================
+-- ✅ TUDO LIMPO AQUI — COLOQUE O QUE QUISER EM CADA ABA
+-- ===========================================
