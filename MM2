@@ -865,8 +865,9 @@ end
 Players.PlayerAdded:Connect(AtualizarLista)
 Players.PlayerRemoving:Connect(AtualizarLista)
 
+
 -- ===========================
--- 🔄 FUNÇÃO PRINCIPAL SKIDFLING
+-- 🔄 FUNÇÃO PRINCIPAL SKIDFLING (OTIMIZADA)
 -- ===========================
 local function SkidFling(JogadorAlvo)
     if not JogadorAlvo or not JogadorAlvo.Character then return end
@@ -910,7 +911,7 @@ local function SkidFling(JogadorAlvo)
         end
 
         local IniciarFling = function(ParteAlvo)
-            local TempoTotal, Inicio, Giro = 2, tick(), 0
+            local TempoTotal, Inicio, Giro = 1.2, tick(), 0 -- Reduzido tempo total para evitar bugs do Void
             repeat
                 if MinhaRaiz and AlvoHumanoide then
                     if ParteAlvo.Velocity.Magnitude < 50 then
@@ -941,13 +942,22 @@ local function SkidFling(JogadorAlvo)
         elseif AlvoCabeca then IniciarFling(AlvoCabeca)
         elseif AlvoPega then IniciarFling(AlvoPega) end
 
-        -- ✅ RESTAURA TUDO CERTO (PARTE QUE FALTAVA E DEIXAVA BUGADO)
+        -- RESTAURAÇÃO DE SEGURANÇA DA FÍSICA
         ForcaCorpo:Destroy()
         MeuHumanoide:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
         workspace.CurrentCamera.CameraSubject = MeuHumanoide
 
-        -- Volta devagar para posição original
+        -- ZERA VELOCIDADE IMEDIATAMENTE PARA NÃO MORRER
+        for _, p in pairs(MeuPersonagem:GetChildren()) do
+            if p:IsA("BasePart") then 
+                p.Velocity = Vector3.new(0, 0, 0)
+                p.RotVelocity = Vector3.new(0, 0, 0) 
+            end
+        end
+
+        -- VOLTA RÁPIDO PARA A POSIÇÃO ORIGINAL COM TIMEOUT
         if getgenv().PosicaoOriginal then
+            local TempoRetorno = tick()
             repeat
                 MinhaRaiz.CFrame = getgenv().PosicaoOriginal * CFrame.new(0,0.5,0)
                 MeuPersonagem:SetPrimaryPartCFrame(getgenv().PosicaoOriginal * CFrame.new(0,0.5,0))
@@ -956,32 +966,13 @@ local function SkidFling(JogadorAlvo)
                     if p:IsA("BasePart") then p.Velocity, p.RotVelocity = Vector3.new(), Vector3.new() end
                 end
                 task.wait()
-            until (MinhaRaiz.Position - getgenv().PosicaoOriginal.Position).Magnitude < 25
+            -- Sai se chegar perto OU se passar mais de 1 segundo (Evita o delay travado)
+            until (MinhaRaiz.Position - getgenv().PosicaoOriginal.Position).Magnitude < 10 or (tick() - TempoRetorno) > 1
+            
             workspace.FallenPartsDestroyHeight = getgenv().AlturaQueda
         end
     end
 end
-
--- ✅ ATUALIZA LISTA IGUAL O TELEPORTE
-local function AtualizarListaFling()
-    table.clear(ListaFling)
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then table.insert(ListaFling, p.Name) end
-    end
-end
-Players.PlayerAdded:Connect(AtualizarListaFling)
-Players.PlayerRemoving:Connect(AtualizarListaFling)
-AtualizarListaFling()
-
-task.spawn(function()
-    while true do
-        task.wait(2)
-        AtualizarListaFling()
-        pcall(function()
-            DropdownFling:SetValues(ListaFling)
-        end)
-    end
-end)
 
 -- ========================
 -- TELEPORTE MAPA E LOBBY
