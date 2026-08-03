@@ -238,7 +238,7 @@ local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
 
 Sec_Tiro:Toggle({
     Title = "Shoot Murderer",
-    Description = Fica atirando ate acerta o assassino
+    Description = "Fica atirando ate acerta o assassino",
     Default = false,
     Callback = function(State)
         AutoShoot = State
@@ -247,7 +247,7 @@ Sec_Tiro:Toggle({
 
 Sec_Tiro:Toggle({
     Title = "Silent AIM Button",
-    Description = Aparece um botao que quando clica a bala vai ate o assassino
+    Description = "Aparece um botao que quando clica a bala vai ate o assassino",
     Default = false,
     Callback = function(State)
         ShowShootButton = State
