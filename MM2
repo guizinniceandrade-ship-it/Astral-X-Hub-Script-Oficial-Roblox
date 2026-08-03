@@ -1117,7 +1117,7 @@ Sec_Tiro:Toggle({
     Callback = function(State) MagicBullet = State end
 })
 
-Sec_Innocent:Toggle({
+Sec_Tiro:Toggle({
     Title = "Auto Grab Gun",
     Description = "Puxa a arma do chão automaticamente quando o xerife morre",
     Default = false,
