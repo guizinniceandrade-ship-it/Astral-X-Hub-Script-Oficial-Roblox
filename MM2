@@ -1211,8 +1211,8 @@ Sec_Tiro:Toggle({
     end
 })
 
-Sec_TROCADO:Toggle({
-    Title = "Magic Bullet",
+Sec_Tiro:Toggle({
+    Title = "Nao esta funcioando",
     Default = false,
     Callback = function(State) MagicBullet = State end
 })
