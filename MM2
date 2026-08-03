@@ -65,6 +65,13 @@ local AutoShoot = false
 local ShowShootButton = false
 local MagicBullet = false
 
+-- ========================
+-- ⚙️ VARIÁVEIS DO FLING
+-- ========================
+getgenv().PosicaoOriginal = nil
+getgenv().AlturaQueda = workspace.FallenPartsDestroyHeight
+local JogadorEscolhido = nil
+
 -- ===========================================
 -- 1. VARIÁVEIS E SERVIÇOS DO AUTO GRAB GUN
 -- ===========================================
@@ -1123,5 +1130,81 @@ Sec_Tiro:Toggle({
     Default = false,
     Callback = function(State)
         AutoGrabGun = State
+    end
+})
+
+-- =========================
+-- 😈 ABA TROLLAGEM
+-- =========================
+local Sec_Fling = Aba_Troll:Section({Title = "Fling"})
+
+-- 🔪 FLING NO ASSASSINO
+Sec_Fling:Button({
+    Title = "Fling Assassino",
+    Callback = function()
+        local Alvo = GetMurderer()
+        if Alvo then
+            SkidFling(Alvo)
+            WindUI:Notify({Title="Fling", Content="✅ Feito no Assassino!", Duration=2})
+        else
+            WindUI:Notify({Title="Fling", Content="❌ Não encontrado!", Duration=2})
+        end
+    end
+})
+
+-- 🔫 FLING NO XERIFE
+Sec_Fling:Button({
+    Title = "Fling Xerife",
+    Callback = function()
+        local Alvo = nil
+        local Dados = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+        if Dados then
+            local ok, Res = pcall(function() return Dados:InvokeServer() end)
+            if ok and Res then
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= player and Res[p.Name] and Res[p.Name].Role == "Sheriff" then
+                        Alvo = p
+                        break
+                    end
+                end
+            end
+        end
+        if Alvo then
+            SkidFling(Alvo)
+            WindUI:Notify({Title="Fling", Content="✅ Feito no Xerife!", Duration=2})
+        else
+            WindUI:Notify({Title="Fling", Content="❌ Não encontrado!", Duration=2})
+        end
+    end
+})
+
+-- 📝 ESCOLHER QUEM QUISER
+Sec_Fling:Dropdown({
+    Title = "Escolha o jogador",
+    Values = function()
+        local lista = {}
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player then table.insert(lista, p.Name) end
+        end
+        return lista
+    end,
+    Default = "",
+    Callback = function(nome)
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Name == nome then JogadorEscolhido = p break end
+        end
+    end
+})
+
+-- 🌀 EXECUTAR FLING
+Sec_Fling:Button({
+    Title = "Aplicar Fling",
+    Callback = function()
+        if JogadorEscolhido then
+            SkidFling(JogadorEscolhido)
+            WindUI:Notify({Title="Fling", Content="✅ Feito em "..JogadorEscolhido.Name, Duration=2})
+        else
+            WindUI:Notify({Title="Fling", Content="❌ Selecione alguém!", Duration=2})
+        end
     end
 })
