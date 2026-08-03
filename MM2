@@ -157,7 +157,6 @@ local LobbyEncontrado = nil
 
 
 
-
 -- =================================================
 -- SISTEMAS DA ABA ASSASSINO
 -- =================================================
@@ -1038,53 +1037,52 @@ end)
 -- TELEPORTE MAPA E LOBBY
 -- ========================
 
--- ✅ BUSCA O MAPA (IGUAL ANTES, NÃO MUDEI NADA)
-local function PegarMapa()
-    for _, v in ipairs(Workspace:GetChildren()) do
-        if v:IsA("Model") then
-            local nome = v.Name:lower()
-            if (v:FindFirstChild("Spawns", true) or v:FindFirstChild("PlayerSpawns", true)) 
-            and not nome:find("lobby") then
-                return v
-            end
-        end
-    end
-end
-
--- ✅ AGORA USA O SEU JEITO DE BUSCAR LOBBY
-local function PegarLobby()
-    for _, v in ipairs(Workspace:GetChildren()) do
-        if v:IsA("Model") and v.Name:lower():find("lobby") then
-            return v
-        end
-    end
-end
-
--- ✅ PEGA PONTO SEGURO
-local function PegarPontoSeguro(modelo)
-    if not modelo then return nil end
-    if modelo.PrimaryPart then return modelo.PrimaryPart.CFrame end
-    local parte = modelo:FindFirstChildWhichIsA("BasePart", true)
-    return parte and parte.CFrame or nil
-end
-
--- ✅ FUNÇÃO DE TELEPORTE
-local function TeleportarPara(modelo)
-    if not modelo then return end
-    local ponto = PegarPontoSeguro(modelo)
-    local char = player.Character
-    if ponto and char and char:FindFirstChild("HumanoidRootPart") then
-        char:PivotTo(ponto + Vector3.new(0, 4, 0))
-    end
-end
-
 -- ==============================================
 -- ==============================================
 -- ==============================================
 
--- =========================
--- SEÇÃO: FARM / Cframe:Lerp + char:PivotTo
--- =========================
+-- ==========================
+-- BOTÕES DA ABA ASSASSINO 
+-- ==========================
+
+-- ==========================
+-- BOTÕES DA ABA XERIFE
+-- ==========================
+local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
+
+Sec_Tiro:Toggle({
+    Title = "Auto Shoot Murderer",
+    Default = false,
+    Callback = function(State) AutoShoot = State end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Shoot Button",
+    Default = false,
+    Callback = function(State)
+        ShowShootButton = State
+        if State then CreateShootButton() else RemoveShootButton() end
+    end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Nao esta funcioando",
+    Default = false,
+    Callback = function(State) MagicBullet = State end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Auto Grab Gun",
+    Description = "Puxa a arma do chão automaticamente quando o xerife morre",
+    Default = false,
+    Callback = function(State)
+        AutoGrabGun = State
+    end
+})
+
+-- ==========================
+-- BOTÕES DA ABA AUTO FARM 
+-- ==========================
 local Sec_FarmLerp = Aba_Farm:Section({Title = "Farm / Cframe:Lerp + char:PivotTo"})
 
 Sec_FarmLerp:Toggle({
@@ -1106,64 +1104,39 @@ Sec_FarmLerp:Slider({
     end
 })
 
--- =========================
--- ABA TELEPORTE
--- =========================
--- Primeiro cria a seção
-local Sec_Teleporte = Aba_Tele:Section({Title = "Teleporte para Player"})
+-- ==========================
+-- BOTÕES DA ABA ESP
+-- ==========================
+local Sec_HL = Aba_ESP:Section({Title = "Highlight"})
+Sec_HL:Toggle({Title="Highlight murderer", Default=false, Callback=function(s) HL_Murder = s end})
+Sec_HL:Toggle({Title="Highlight xerife", Default=false, Callback=function(s) HL_Xerife = s end})
+Sec_HL:Toggle({Title="Highlight Herói", Default=false, Callback=function(s) HL_Heroi = s end})
+Sec_HL:Toggle({Title="Highlight inocente", Default=false, Callback=function(s) HL_Inocente = s end})
 
--- Depois cria o dropdown JÁ COM A LISTA CARREGADA
-DropdownJogadores = Sec_Teleporte:Dropdown({
-    Title = "Escolhe alguém",
-    Values = PegarListaJogadores(),
-    Default = "",
-    Callback = function(escolha)
-        JogadorSelecionadoTP = escolha
-    end
-})
+local Sec_Dist = Aba_ESP:Section({Title = "Distância"})
+Sec_Dist:Toggle({Title="Distância murderer", Default=false, Callback=function(s) Dist_Murder = s end})
+Sec_Dist:Toggle({Title="Distância xerife", Default=false, Callback=function(s) Dist_Xerife = s end})
+Sec_Dist:Toggle({Title="Distância Herói", Default=false, Callback=function(s) Dist_Heroi = s end})
+Sec_Dist:Toggle({Title="Distância inocente", Default=false, Callback=function(s) Dist_Inocente = s end})
 
--- Por último o botão de teleporte
-Sec_Teleporte:Button({
-    Title = "Teleporte para o Jogador",
-    Callback = function()
-        if not JogadorSelecionadoTP then return end
-        local alvo = Players:FindFirstChild(JogadorSelecionadoTP)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
-            local eu = player.Character
-            if eu and eu:FindFirstChild("HumanoidRootPart") then
-                eu:PivotTo(alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0))
-            end
-        end
-    end
-})
+local Sec_Nome = Aba_ESP:Section({Title = "Nome"})
+Sec_Nome:Toggle({Title="Nome murderer", Default=false, Callback=function(s) Nome_Murder = s end})
+Sec_Nome:Toggle({Title="Nome xerife", Default=false, Callback=function(s) Nome_Xerife = s end})
+Sec_Nome:Toggle({Title="Nome Herói", Default=false, Callback=function(s) Nome_Heroi = s end})
+Sec_Nome:Toggle({Title="Nome inocente", Default=false, Callback=function(s) Nome_Inocente = s end})
 
--- Chama a primeira atualização DEPOIS de tudo criado
-AtualizarLista()
+local Sec_Linha = Aba_ESP:Section({Title = "Linha"})
+Sec_Linha:Toggle({Title="Linha murderer", Default=false, Callback=function(s) Linha_Murder = s end})
+Sec_Linha:Toggle({Title="Linha xerife", Default=false, Callback=function(s) Linha_Xerife = s end})
+Sec_Linha:Toggle({Title="Linha Herói", Default=false, Callback=function(s) Linha_Heroi = s end})
+Sec_Linha:Toggle({Title="Linha inocente", Default=false, Callback=function(s) Linha_Inocente = s end})
 
--- ===================================================
--- 🗺️ SISTEMA DE LOCALIZAÇÃO DO LOBBY E MAPA
--- ===================================================
-local Sec_TeleGeral = Aba_Tele:Section({Title = "Teleporte Rápido"})
+local Sec_Arma = Aba_ESP:Section({Title = "ARMA"})
+Sec_Arma:Toggle({Title="ESP GunDrop", Default=false, Callback=function(s) ESP_Arma = s end})
 
-Sec_TeleGeral:Button({
-    Title = "Ir para o Mapa",
-    Callback = function()
-        local mapa = PegarMapa()
-        TeleportarPara(mapa)
-    end
-})
-
-Sec_TeleGeral:Button({
-    Title = "Voltar para o Lobby",
-    Callback = function()
-        local lobby = PegarLobby()
-        TeleportarPara(lobby)
-    end
-})
-
--- =========================
--- ABA LOCAL PLAYER
--- =========================
+-- ==========================
+-- BOTÕES DA ABA LOCAL PLAYER 
+-- ==========================
 local Sec_Local = Aba_Local:Section({Title = "Controle de personagem"})
 
 Sec_Local:Slider({
@@ -1198,9 +1171,8 @@ Sec_Local:Toggle({
     end
 })
 
--- =========================
--- SEÇÃO: CONFIGURAÇÃO DE CÂMERA PLAYER
--- =========================
+-- =====================================================================================
+
 local Sec_Camera = Aba_Local:Section({Title = "Configuração de câmera"})
 
 Sec_Camera:Toggle({
@@ -1227,9 +1199,8 @@ Sec_Camera:Slider({
     end
 })
 
--- =========================
--- SEÇÃO: SCRIPTS DE ANIMAÇÃO
--- =========================
+-- ============================================================================
+
 local Sec_Animacao = Aba_Local:Section({Title = "Scripts de animação"})
 
 Sec_Animacao:Button({
@@ -1240,127 +1211,59 @@ Sec_Animacao:Button({
         end)
     end
 })
+-- ==========================
+-- BOTÕES DA ABA TROLLAGEM 
+-- ==========================
 
--- ===================================================
--- 🎛️ SEÇÕES E TOGGLES DA ABA ESP
--- ===================================================
-local Sec_HL = Aba_ESP:Section({Title = "Highlight"})
-Sec_HL:Toggle({Title="Highlight murderer", Default=false, Callback=function(s) HL_Murder = s end})
-Sec_HL:Toggle({Title="Highlight xerife", Default=false, Callback=function(s) HL_Xerife = s end})
-Sec_HL:Toggle({Title="Highlight Herói", Default=false, Callback=function(s) HL_Heroi = s end})
-Sec_HL:Toggle({Title="Highlight inocente", Default=false, Callback=function(s) HL_Inocente = s end})
+-- ==========================
+-- BOTÕES DA ABA TELEPORTE 
+-- ==========================
+-- Primeiro cria a seção
+local Sec_Teleporte = Aba_Tele:Section({Title = "Teleporte para Player"})
 
-local Sec_Dist = Aba_ESP:Section({Title = "Distância"})
-Sec_Dist:Toggle({Title="Distância murderer", Default=false, Callback=function(s) Dist_Murder = s end})
-Sec_Dist:Toggle({Title="Distância xerife", Default=false, Callback=function(s) Dist_Xerife = s end})
-Sec_Dist:Toggle({Title="Distância Herói", Default=false, Callback=function(s) Dist_Heroi = s end})
-Sec_Dist:Toggle({Title="Distância inocente", Default=false, Callback=function(s) Dist_Inocente = s end})
-
-local Sec_Nome = Aba_ESP:Section({Title = "Nome"})
-Sec_Nome:Toggle({Title="Nome murderer", Default=false, Callback=function(s) Nome_Murder = s end})
-Sec_Nome:Toggle({Title="Nome xerife", Default=false, Callback=function(s) Nome_Xerife = s end})
-Sec_Nome:Toggle({Title="Nome Herói", Default=false, Callback=function(s) Nome_Heroi = s end})
-Sec_Nome:Toggle({Title="Nome inocente", Default=false, Callback=function(s) Nome_Inocente = s end})
-
-local Sec_Linha = Aba_ESP:Section({Title = "Linha"})
-Sec_Linha:Toggle({Title="Linha murderer", Default=false, Callback=function(s) Linha_Murder = s end})
-Sec_Linha:Toggle({Title="Linha xerife", Default=false, Callback=function(s) Linha_Xerife = s end})
-Sec_Linha:Toggle({Title="Linha Herói", Default=false, Callback=function(s) Linha_Heroi = s end})
-Sec_Linha:Toggle({Title="Linha inocente", Default=false, Callback=function(s) Linha_Inocente = s end})
-
-local Sec_Arma = Aba_ESP:Section({Title = "ARMA"})
-Sec_Arma:Toggle({Title="ESP GunDrop", Default=false, Callback=function(s) ESP_Arma = s end})
-
--- ===========================================
--- 3. ELEMENTOS E BOTÕES DA INTERFACE (UI)
--- ===========================================
-
-local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
-
-Sec_Tiro:Toggle({
-    Title = "Auto Shoot Murderer",
-    Default = false,
-    Callback = function(State) AutoShoot = State end
-})
-
-Sec_Tiro:Toggle({
-    Title = "Shoot Button",
-    Default = false,
-    Callback = function(State)
-        ShowShootButton = State
-        if State then CreateShootButton() else RemoveShootButton() end
-    end
-})
-
-Sec_Tiro:Toggle({
-    Title = "Nao esta funcioando",
-    Default = false,
-    Callback = function(State) MagicBullet = State end
-})
-
-Sec_Tiro:Toggle({
-    Title = "Auto Grab Gun",
-    Description = "Puxa a arma do chão automaticamente quando o xerife morre",
-    Default = false,
-    Callback = function(State)
-        AutoGrabGun = State
-    end
-})
-
--- =========================
--- 😈 ABA TROLLAGEM
--- =========================
-local Sec_Fling = Aba_Troll:Section({Title = "🌀 Fling"})
-
--- ✅ MESMO SISTEMA DO TELEPORTE
-DropdownFling = Sec_Fling:Dropdown({
-    Title = "Escolha o jogador",
-    Values = ListaFling,
+-- Depois cria o dropdown JÁ COM A LISTA CARREGADA
+DropdownJogadores = Sec_Teleporte:Dropdown({
+    Title = "Escolhe alguém",
+    Values = PegarListaJogadores(),
     Default = "",
-    Callback = function(nome)
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p.Name == nome then AlvoFling = p break end
-        end
+    Callback = function(escolha)
+        JogadorSelecionadoTP = escolha
     end
 })
 
-Sec_Fling:Button({
-    Title = "FLING SELECIONADO",
+-- Por último o botão de teleporte
+Sec_Teleporte:Button({
+    Title = "Teleporte para o Jogador",
     Callback = function()
-        if AlvoFling then
-            SkidFling(AlvoFling)
-            WindUI:Notify({Title="Fling", Content="✅ Feito em "..AlvoFling.Name, Duration=2})
-        else
-            WindUI:Notify({Title="Fling", Content="❌ Selecione primeiro!", Duration=2})
-        end
-    end
-})
-
--- BOTÕES RÁPIDOS
-Sec_Fling:Button({
-    Title = "FLING ASSASSINO",
-    Callback = function()
-        local Alvo = GetMurderer()
-        if Alvo then SkidFling(Alvo) end
-    end
-})
-
-Sec_Fling:Button({
-    Title = "FLING XERIFE",
-    Callback = function()
-        local Alvo = nil
-        local Dados = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
-        if Dados then
-            local ok, Res = pcall(function() return Dados:InvokeServer() end)
-            if ok and Res then
-                for _, p in ipairs(Players:GetPlayers()) do
-                    if p ~= player and Res[p.Name] and Res[p.Name].Role == "Sheriff" then
-                        Alvo = p
-                        break
-                    end
-                end
+        if not JogadorSelecionadoTP then return end
+        local alvo = Players:FindFirstChild(JogadorSelecionadoTP)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            local eu = player.Character
+            if eu and eu:FindFirstChild("HumanoidRootPart") then
+                eu:PivotTo(alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0))
             end
         end
-        if Alvo then SkidFling(Alvo) end
+    end
+})
+
+-- Chama a primeira atualização DEPOIS de tudo criado
+AtualizarLista()
+
+
+local Sec_TeleGeral = Aba_Tele:Section({Title = "Teleporte Rápido"})
+
+Sec_TeleGeral:Button({
+    Title = "Ir para o Mapa",
+    Callback = function()
+        local mapa = PegarMapa()
+        TeleportarPara(mapa)
+    end
+})
+
+Sec_TeleGeral:Button({
+    Title = "Voltar para o Lobby",
+    Callback = function()
+        local lobby = PegarLobby()
+        TeleportarPara(lobby)
     end
 })
