@@ -631,6 +631,130 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- ========================================================
 -- SISTEMA / XERIFE 
 -- ========================================================
+-- 🔍 FUNÇÃO: ACHAR O ASSASSINO
+local function AcharAssassino()
+    local Dados = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+    if not Dados then return nil end
+    local ok, res = pcall(function() return Dados:InvokeServer() end)
+    if not ok or not res then return nil end
+    for _, Jogador in ipairs(Players:GetPlayers()) do
+        if Jogador ~= player and Jogador:GetAttribute("Alive") then
+            local Info = res[Jogador.Name]
+            if Info and Info.Role == "Murderer" then
+                return Jogador
+            end
+        end
+    end
+    return nil
+end
+
+-- 🎯 FUNÇÃO: ATIRAR NO ASSASSINO (EXATA DO SEU SCRIPT)
+local function shootMurderer()
+    local Personagem = player.Character
+    if not Personagem then return false end
+
+    local Arma = Personagem:FindFirstChild("Gun") or (player.Backpack and player.Backpack:FindFirstChild("Gun"))
+    if not Arma then return false end
+
+    if Arma.Parent ~= Personagem then
+        Arma.Parent = Personagem
+        task.wait(0.05)
+    end
+
+    local Assassino = AcharAssassino()
+    if not Assassino or not Assassino.Character then return false end
+
+    local Alvo = Assassino.Character:FindFirstChild("Torso") 
+                or Assassino.Character:FindFirstChild("UpperTorso") 
+                or Assassino.Character:FindFirstChild("HumanoidRootPart")
+    if not Alvo then return false end
+
+    local Remoto = Arma:FindFirstChild("ShootEvent") or Arma:FindFirstChild("Shoot")
+    if Remoto then
+        Remoto:FireServer(CFrame.new(Alvo.Position), CFrame.new(Alvo.Position))
+        return true
+    end
+    return false
+end
+
+-- 🎯 FUNÇÃO: CRIAR BOTÃO DE TIRO ARRASTÁVEL
+local function CriarBotaoTiro()
+    if BotaoTiro then return end
+    local Gui = Instance.new("ScreenGui")
+    Gui.Name = "BotaoTiroXerife"
+    Gui.ResetOnSpawn = false
+    Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    Gui.Parent = CoreGui
+
+    local Botao = Instance.new("ImageButton")
+    Botao.Name = "Tiro"
+    Botao.Size = UDim2.new(0, 80, 0, 80)
+    Botao.Position = UDim2.new(0.5, -40, 0.5, -40)
+    Botao.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    Botao.BackgroundTransparency = 0.3
+    Botao.BorderSizePixel = 0
+    Botao.Parent = Gui
+
+    local Cantos = Instance.new("UICorner")
+    Cantos.CornerRadius = UDim.new(1, 0)
+    Cantos.Parent = Botao
+
+    local Icone = Instance.new("TextLabel")
+    Icone.Size = UDim2.new(1, 0, 1, 0)
+    Icone.BackgroundTransparency = 1
+    Icone.Text = "\u{1f52b}"
+    Icone.TextSize = 32
+    Icone.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Icone.Font = Enum.Font.GothamBold
+    Icone.Parent = Botao
+
+    -- ARRASTAR BOTÃO
+    Botao.InputBegan:Connect(function(Toque)
+        if Toque.UserInputType == Enum.UserInputType.MouseButton1 or Toque.UserInputType == Enum.UserInputType.Touch then
+            SegurandoBotao = true
+            PosicaoOriginal = Botao.Position
+            ToqueInicial = Toque.Position
+            Toque.Changed:Connect(function()
+                if Toque.UserInputState == Enum.UserInputState.End then
+                    SegurandoBotao = false
+                end
+            end)
+        end
+    end)
+
+    Botao.InputChanged:Connect(function(Toque)
+        if (Toque.UserInputType == Enum.UserInputType.MouseMovement or Toque.UserInputType == Enum.UserInputType.Touch) and SegurandoBotao then
+            Botao.Position = PosicaoOriginal + UDim2.fromOffset(Toque.Position.X - ToqueInicial.X, Toque.Position.Y - ToqueInicial.Y)
+        end
+    end)
+
+    -- ATIRAR AO CLICAR
+    Botao.MouseButton1Click:Connect(function()
+        if not SegurandoBotao then
+            shootMurderer()
+        end
+    end)
+
+    BotaoTiro = Gui
+end
+
+-- 🗑️ FUNÇÃO: REMOVER BOTÃO
+local function RemoverBotaoTiro()
+    if BotaoTiro then
+        BotaoTiro:Destroy()
+        BotaoTiro = nil
+    end
+end
+
+-- 🔁 LOOP: AUTO ATIRAR
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if AutoTiroAssassino then
+            shootMurderer()
+        end
+    end
+end)
 
 
 -- ========================
@@ -835,10 +959,6 @@ Sec_Animacao:Button({
         end)
     end
 })
-
--- ========================================================
--- ELEMENTOS DE INTERFACE / BOTÕES (UI Astral)
--- ========================================================
 
 -- =========================
 -- 🔫 ABA XERIFE → SEÇÃO TIRO
