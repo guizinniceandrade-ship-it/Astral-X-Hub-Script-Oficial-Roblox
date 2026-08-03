@@ -868,6 +868,120 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- ===========================
 -- 🔄 FUNÇÃO PRINCIPAL SKIDFLING
 -- ===========================
+local function SkidFling(JogadorAlvo)
+    if not JogadorAlvo or not JogadorAlvo.Character then return end
+
+    local MeuPersonagem = player.Character
+    if not MeuPersonagem then return end
+    local MeuHumanoide = MeuPersonagem:FindFirstChildOfClass("Humanoid")
+    local MinhaRaiz = MeuHumanoide and MeuHumanoide.RootPart
+    local AlvoPersonagem = JogadorAlvo.Character
+
+    local AlvoHumanoide, AlvoRaiz, AlvoCabeca, AlvoPega
+
+    if AlvoPersonagem:FindFirstChildOfClass("Humanoid") then
+        AlvoHumanoide = AlvoPersonagem:FindFirstChildOfClass("Humanoid")
+    end
+    AlvoRaiz = AlvoHumanoide and AlvoHumanoide.RootPart
+    AlvoCabeca = AlvoPersonagem:FindFirstChild("Head")
+
+    for _, item in pairs(AlvoPersonagem:GetChildren()) do
+        if item:IsA("Accessory") and item:FindFirstChild("Handle") then
+            AlvoPega = item.Handle
+            break
+        end
+    end
+
+    if MeuPersonagem and MeuHumanoide and MinhaRaiz then
+        -- Salva posição só se estiver parado
+        if MinhaRaiz.Velocity.Magnitude < 50 then
+            getgenv().PosicaoOriginal = MinhaRaiz.CFrame
+        end
+        if AlvoHumanoide and AlvoHumanoide.Sit then return end
+
+        -- Câmera no alvo
+        workspace.CurrentCamera.CameraSubject = AlvoCabeca or AlvoPega or AlvoRaiz
+
+        local AplicarForca = function(ParteAlvo, Angulo, Desvio)
+            MinhaRaiz.CFrame = CFrame.new(ParteAlvo.Position) * Angulo * Desvio
+            MeuPersonagem:SetPrimaryPartCFrame(CFrame.new(ParteAlvo.Position) * Angulo * Desvio)
+            MinhaRaiz.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+            MinhaRaiz.RotVelocity = Vector3.new(9e8,9e8,9e8)
+        end
+
+        local IniciarFling = function(ParteAlvo)
+            local TempoTotal, Inicio, Giro = 2, tick(), 0
+            repeat
+                if MinhaRaiz and AlvoHumanoide then
+                    if ParteAlvo.Velocity.Magnitude < 50 then
+                        Giro += 100
+                        AplicarForca(ParteAlvo, CFrame.new(0,1.5,0) + AlvoHumanoide.MoveDirection * ParteAlvo.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(Giro),0,0))
+                        task.wait()
+                        AplicarForca(ParteAlvo, CFrame.new(0,-1.5,0) + AlvoHumanoide.MoveDirection * ParteAlvo.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(Giro),0,0))
+                        task.wait()
+                    else
+                        AplicarForca(ParteAlvo, CFrame.new(0,1.5,AlvoHumanoide.WalkSpeed), CFrame.Angles(math.rad(90),0,0))
+                        task.wait()
+                        AplicarForca(ParteAlvo, CFrame.new(0,-1.5,-AlvoHumanoide.WalkSpeed), CFrame.new())
+                        task.wait()
+                    end
+                end
+            until tick() > Inicio + TempoTotal
+        end
+
+        -- Execução
+        workspace.FallenPartsDestroyHeight = math.huge
+        local ForcaCorpo = Instance.new("BodyVelocity")
+        ForcaCorpo.MaxForce = Vector3.new(9e9,9e9,9e9)
+        ForcaCorpo.Velocity = Vector3.new()
+        ForcaCorpo.Parent = MinhaRaiz
+        MeuHumanoide:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        if AlvoRaiz then IniciarFling(AlvoRaiz)
+        elseif AlvoCabeca then IniciarFling(AlvoCabeca)
+        elseif AlvoPega then IniciarFling(AlvoPega) end
+
+        -- ✅ RESTAURA TUDO CERTO (PARTE QUE FALTAVA E DEIXAVA BUGADO)
+        ForcaCorpo:Destroy()
+        MeuHumanoide:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        workspace.CurrentCamera.CameraSubject = MeuHumanoide
+
+        -- Volta devagar para posição original
+        if getgenv().PosicaoOriginal then
+            repeat
+                MinhaRaiz.CFrame = getgenv().PosicaoOriginal * CFrame.new(0,0.5,0)
+                MeuPersonagem:SetPrimaryPartCFrame(getgenv().PosicaoOriginal * CFrame.new(0,0.5,0))
+                MeuHumanoide:ChangeState(Enum.HumanoidStateType.GettingUp)
+                for _, p in pairs(MeuPersonagem:GetChildren()) do
+                    if p:IsA("BasePart") then p.Velocity, p.RotVelocity = Vector3.new(), Vector3.new() end
+                end
+                task.wait()
+            until (MinhaRaiz.Position - getgenv().PosicaoOriginal.Position).Magnitude < 25
+            workspace.FallenPartsDestroyHeight = getgenv().AlturaQueda
+        end
+    end
+end
+
+-- ✅ ATUALIZA LISTA IGUAL O TELEPORTE
+local function AtualizarListaFling()
+    table.clear(ListaFling)
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then table.insert(ListaFling, p.Name) end
+    end
+end
+Players.PlayerAdded:Connect(AtualizarListaFling)
+Players.PlayerRemoving:Connect(AtualizarListaFling)
+AtualizarListaFling()
+
+task.spawn(function()
+    while true do
+        task.wait(2)
+        AtualizarListaFling()
+        pcall(function()
+            DropdownFling:SetValues(ListaFling)
+        end)
+    end
+end)
 
 -- ========================
 -- TELEPORTE MAPA E LOBBY
