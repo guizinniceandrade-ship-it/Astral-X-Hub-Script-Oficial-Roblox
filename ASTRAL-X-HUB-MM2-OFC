@@ -698,3 +698,31 @@ end)
 -- =================================================
 -- SISTEMAS DA ABA TELEPORTE
 -- =================================================
+local function PegarListaJogadores()
+    local lista = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then
+            table.insert(lista, p.Name)
+        end
+    end
+    return lista
+end
+
+local function AtualizarLista()
+    local novaLista = PegarListaJogadores()
+    ListaNomesDropdown = novaLista
+
+    -- Tenta todas as formas que o WindUI aceita
+    pcall(function() DropdownJogadores:SetValues(novaLista) end)
+    pcall(function() DropdownJogadores:Update(novaLista) end)
+    pcall(function() DropdownJogadores:Refresh(novaLista) end)
+
+    -- Apaga a escolha se a pessoa saiu
+    if JogadorSelecionadoTP and not table.find(novaLista, JogadorSelecionadoTP) then
+        JogadorSelecionadoTP = nil
+        pcall(function() DropdownJogadores:SetValue("") end)
+    end
+end
+
+Players.PlayerAdded:Connect(AtualizarLista)
+Players.PlayerRemoving:Connect(AtualizarLista)
