@@ -49,6 +49,11 @@ local Aba_Troll = Window:Tab({Title="Trollagem"})
 local Aba_Tele = Window:Tab({Title="Teleporte"})
 
 -- ===========================================
+-- VARIÁVEIS DA ABA ASSASSINO
+-- ===========================================
+local AutoKillAll = false
+
+-- ===========================================
 -- VARIÁVEIS DA ABA XERIFE
 -- ===========================================
 
@@ -895,6 +900,24 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- ===============================
 -- BOTOES DA ABA ASSASSINO
 -- ================================
+local Sec_Assassino = Aba_Assassino:Section({Title = "Funções de Assassino"})
+
+Sec_Assassino:Toggle({
+    Title = "Auto Kill All",
+    Description = "Mata todos 1 por 1 quando vc é assassino",
+    Default = false,
+    Callback = function(Estado)
+        AutoKillAll = Estado
+    end
+})
+
+Sec_Assassino:Button({
+    Title = "Matar Todos Agora",
+    Description = "Mata todos de uma vez",
+    Callback = function()
+        MatarTodos()
+    end
+})
 
 -- ===============================
 -- BOTOES DA ABA XERIFE
