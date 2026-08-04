@@ -293,7 +293,7 @@ local function ShootMurderer()
     end
 end
 
--- 🎯 BOTÃO COM ESTRELAS SE MOVENDO, CANTOS ARREDONDADOS
+-- 🎯 BOTÃO EXATAMENTE COMO VOCÊ PEDIU: ARREDONDADO, PRETO TRANSPARENTE, ESTRELAS SE MOVENDO
 local function CreateShootButton()
     if ShootButtonGui then return end
     local Gui = Instance.new("ScreenGui")
@@ -302,16 +302,16 @@ local function CreateShootButton()
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = CoreGui
 
-    -- Botão principal
+    -- Botão retangular
     local Btn = Instance.new("ImageButton")
     Btn.Size = UDim2.new(0, 180, 0, 60)
     Btn.Position = UDim2.new(0.5, -90, 0.5, -30)
     Btn.BackgroundColor3 = Color3.new(0,0,0)
-    Btn.BackgroundTransparency = 0.65 -- Preto meio transparente
+    Btn.BackgroundTransparency = 0.65 -- Preto semi-transparente
     Btn.BorderSizePixel = 0
     Btn.Parent = Gui
 
-    -- Borda preta
+    -- Borda preta em volta
     local Borda = Instance.new("UIStroke")
     Borda.Color = Color3.new(0,0,0)
     Borda.Thickness = 2
@@ -322,7 +322,7 @@ local function CreateShootButton()
     Arredondar.CornerRadius = UDim.new(0, 12)
     Arredondar.Parent = Btn
 
-    -- ✨ Estrelas/pontos se movendo
+    -- ✨ Estrelas/pontos brancos se movendo e piscando
     local Estrelas = {}
     for i = 1, 18 do
         local Estrela = Instance.new("Frame")
@@ -335,7 +335,7 @@ local function CreateShootButton()
         table.insert(Estrelas, Estrela)
     end
 
-    -- Texto sempre na frente
+    -- Texto sempre na frente das estrelas
     local Texto = Instance.new("TextLabel")
     Texto.Size = UDim2.new(1,0,1,0)
     Texto.BackgroundTransparency = 1
@@ -364,7 +364,9 @@ local function CreateShootButton()
             buttonStartPos = Btn.Position
             dragStartPos = Input.Position
             Input.Changed:Connect(function()
-                if Input.UserInputState == Enum.UserInputState.End then isDragging = false end
+                if Input.UserInputState == Enum.UserInputState.End then
+                    isDragging = false
+                end
             end)
         end
     end)
@@ -460,8 +462,6 @@ task.spawn(function()
         GetGun()
     end
 end)
-
-
 
 
 
