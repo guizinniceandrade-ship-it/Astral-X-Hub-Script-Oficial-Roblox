@@ -246,31 +246,6 @@ end)
 -- =================================================
 -- SISTEMAS DA ABA XERIFE 
 -- =================================================
-local function GetPing()
-    local ok, value = pcall(function()
-        return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-    end)
-    return ok and value or 100
-end
-
--- Buscar Assassino na Rodada
-local function GetMurderer()
-    local DataRemote = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
-    if not DataRemote then return nil end
-    local ok, Data = pcall(function() return DataRemote:InvokeServer() end)
-    if not ok or not Data then return nil end
-    for _, Player in next, Players:GetPlayers() do
-        if Player ~= player and Player:GetAttribute("Alive") then
-            local Info = Data[Player.Name]
-            if Info and Info.Role == "Murderer" then
-                return Player
-            end
-        end
-    end
-    return nil
-end
-
--- Função Principal de Tiro e Mira Preditiva
 local function ShootMurderer()
     local Char = player.Character
     if not Char or not Char:FindFirstChild("HumanoidRootPart") then return end
@@ -318,8 +293,7 @@ local function ShootMurderer()
     end
 end
 
--- 🎯 NOVO BOTÃO EXATAMENTE COMO VOCÊ PEDIU
--- Retangular, fundo invisível, borda preta, escrito Shoot Murderer
+-- 🎯 BOTÃO COM ESTRELAS SE MOVENDO, CANTOS ARREDONDADOS
 local function CreateShootButton()
     if ShootButtonGui then return end
     local Gui = Instance.new("ScreenGui")
@@ -328,29 +302,60 @@ local function CreateShootButton()
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = CoreGui
 
-    -- Botão retangular
+    -- Botão principal
     local Btn = Instance.new("ImageButton")
-    Btn.Size = UDim2.new(0, 150, 0, 55)
-    Btn.Position = UDim2.new(0.5, -75, 0.5, -27)
-    Btn.BackgroundTransparency = 1 -- Fundo invisível
+    Btn.Size = UDim2.new(0, 180, 0, 60)
+    Btn.Position = UDim2.new(0.5, -90, 0.5, -30)
+    Btn.BackgroundColor3 = Color3.new(0,0,0)
+    Btn.BackgroundTransparency = 0.65 -- Preto meio transparente
     Btn.BorderSizePixel = 0
     Btn.Parent = Gui
 
-    -- Linha preta em volta
+    -- Borda preta
     local Borda = Instance.new("UIStroke")
     Borda.Color = Color3.new(0,0,0)
     Borda.Thickness = 2
     Borda.Parent = Btn
 
-    -- Texto no meio
+    -- Cantos arredondados
+    local Arredondar = Instance.new("UICorner")
+    Arredondar.CornerRadius = UDim.new(0, 12)
+    Arredondar.Parent = Btn
+
+    -- ✨ Estrelas/pontos se movendo
+    local Estrelas = {}
+    for i = 1, 18 do
+        local Estrela = Instance.new("Frame")
+        Estrela.Size = UDim2.new(0, math.random(2,4), 0, math.random(2,4))
+        Estrela.BackgroundColor3 = Color3.new(1,1,1)
+        Estrela.BackgroundTransparency = 0.2
+        Estrela.Position = UDim2.new(math.random(10,90)/100, 0, math.random(10,90)/100, 0)
+        Estrela.AnchorPoint = Vector2.new(0.5,0.5)
+        Estrela.Parent = Btn
+        table.insert(Estrelas, Estrela)
+    end
+
+    -- Texto sempre na frente
     local Texto = Instance.new("TextLabel")
     Texto.Size = UDim2.new(1,0,1,0)
     Texto.BackgroundTransparency = 1
     Texto.Text = "Shoot Murderer"
     Texto.TextColor3 = Color3.new(1,1,1)
-    Texto.TextSize = 19
+    Texto.TextSize = 20
     Texto.Font = Enum.Font.GothamBold
+    Texto.ZIndex = 10
     Texto.Parent = Btn
+
+    -- Animação das estrelas
+    task.spawn(function()
+        while ShootButtonGui do
+            for _, Estrela in pairs(Estrelas) do
+                Estrela.Position = UDim2.new(math.random(8,92)/100, 0, math.random(8,92)/100, 0)
+                Estrela.BackgroundTransparency = math.random(2,7)/10
+            end
+            task.wait(0.35)
+        end
+    end)
 
     -- Controle de arrastar e clique
     Btn.InputBegan:Connect(function(Input)
@@ -359,9 +364,7 @@ local function CreateShootButton()
             buttonStartPos = Btn.Position
             dragStartPos = Input.Position
             Input.Changed:Connect(function()
-                if Input.UserInputState == Enum.UserInputState.End then
-                    isDragging = false
-                end
+                if Input.UserInputState == Enum.UserInputState.End then isDragging = false end
             end)
         end
     end)
