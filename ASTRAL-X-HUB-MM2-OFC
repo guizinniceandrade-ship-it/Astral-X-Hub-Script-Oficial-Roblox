@@ -307,22 +307,28 @@ local function CreateShootButton()
     local Btn = Instance.new("ImageButton")
     Btn.Size = UDim2.new(0, 150, 0, 55)
     Btn.Position = UDim2.new(0.5, -75, 0.5, -27)
-    Btn.BackgroundTransparency = 5 -- Fundo invisível
-    Btn.BorderSizePixel = 3
+    Btn.BackgroundColor3 = Color3.new(0, 0, 0) -- Preto
+    Btn.BackgroundTransparency = 0.6 -- Meio transparente
+    Btn.BorderSizePixel = 0
     Btn.Parent = Gui
 
-    -- Linha preta em volta
+    -- Cantos arredondados
+    local Arredondar = Instance.new("UICorner")
+    Arredondar.CornerRadius = UDim.new(0, 10)
+    Arredondar.Parent = Btn
+
+    -- Borda preta em volta
     local Borda = Instance.new("UIStroke")
-    Borda.Color = Color3.new(0,0,0)
+    Borda.Color = Color3.new(0, 0, 0)
     Borda.Thickness = 2
     Borda.Parent = Btn
 
     -- Texto no meio
     local Texto = Instance.new("TextLabel")
-    Texto.Size = UDim2.new(1,0,1,0)
+    Texto.Size = UDim2.new(1, 0, 1, 0)
     Texto.BackgroundTransparency = 1
     Texto.Text = "Shoot Murderer"
-    Texto.TextColor3 = Color3.new(1,1,1)
+    Texto.TextColor3 = Color3.new(1, 1, 1)
     Texto.TextSize = 19
     Texto.Font = Enum.Font.GothamBold
     Texto.Parent = Btn
