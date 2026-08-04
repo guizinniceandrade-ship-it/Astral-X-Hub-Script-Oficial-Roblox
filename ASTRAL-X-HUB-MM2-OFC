@@ -147,6 +147,69 @@ task.spawn(function()
     end
 end)
 
+-- Localiza a pasta do mapa atual no Workspace
+local function FindMap()
+    for _, child in ipairs(workspace:GetChildren()) do
+        if child:GetAttribute("MapID") then
+            return child
+        end
+    end
+    return nil
+end
+
+-- Verifica a função/cargo do jogador via ReplicatedStorage
+local function GetPlayerRole()
+    local DataRemote = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+    if not DataRemote then return nil end
+
+    local ok, Data = pcall(function()
+        return DataRemote:InvokeServer()
+    end)
+
+    if not ok or not Data then return nil end
+
+    local PlayerData = Data[player.Name]
+    if PlayerData and PlayerData.Role then
+        return PlayerData.Role
+    end
+
+    return nil
+end
+
+-- Retorna se o jogador local é o Assassino
+local function IsMurderer()
+    return GetPlayerRole() == "Murderer"
+end
+
+-- Função principal que teleporta a arma até você
+local function GetGun()
+    pcall(function()
+        if not AutoGrabGun then return end
+        if not player:GetAttribute("Alive") then return end
+        if IsMurderer() then return end
+
+        local map = FindMap()
+        if not map then return end
+
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+
+        -- Se houver uma GunDrop no mapa, teleporta ela instantaneamente até o jogador
+        local gunDrop = map:FindFirstChild("GunDrop")
+        if gunDrop then
+            gunDrop.CFrame = character.HumanoidRootPart.CFrame
+        end
+    end)
+end
+
+-- Loop de verificação em tempo real (Roda a cada frame/Heartbeat)
+task.spawn(function()
+    while true do
+        RunService.Heartbeat:Wait()
+        GetGun()
+    end
+end)
+
 
 
 
