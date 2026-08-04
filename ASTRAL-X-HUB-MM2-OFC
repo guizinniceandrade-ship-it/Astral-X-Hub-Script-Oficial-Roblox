@@ -899,10 +899,63 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- ===============================
 -- BOTOES DA ABA XERIFE
 -- ================================
+local Sec_Tiro = Aba_Xerife:Section({Title = "Mira e Tiro"})
+
+Sec_Tiro:Toggle({
+    Title = "Auto Shoot Murderer",
+    Default = false,
+    Callback = function(State) AutoShoot = State end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Shoot Button",
+    Default = false,
+    Callback = function(State)
+        ShowShootButton = State
+        if State then CreateShootButton() else RemoveShootButton() end
+    end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Nao esta funcioando",
+    Default = false,
+    Callback = function(State) MagicBullet = State end
+})
+
+Sec_Tiro:Toggle({
+    Title = "Auto Grab Gun",
+    Description = "Puxa a arma do chão automaticamente quando o xerife morre",
+    Default = false,
+    Callback = function(State)
+        AutoGrabGun = State
+    end
+})
+
 
 -- ===============================
 -- BOTOES DA ABA FARM 
 -- ================================
+local Sec_FarmLerp = Aba_Farm:Section({Title = "Farm / Cframe:Lerp + char:PivotTo"})
+
+Sec_FarmLerp:Toggle({
+    Title = "Ligar Auto Farm",
+    Default = false,
+    Callback = function(s)
+        AutoFarmAtivo = s
+        if not s then 
+            table.clear(collectedCoins) 
+        end
+    end
+})
+
+Sec_FarmLerp:Slider({
+    Title = "Velocidade do Auto Farm",
+    Value = {Min = 10, Max = 40, Default = 22},
+    Callback = function(v) 
+        CONFIG_FARM.velocidade = v 
+    end
+})
+
 
 -- ===============================
 -- BOTOES DA ABA ESP
