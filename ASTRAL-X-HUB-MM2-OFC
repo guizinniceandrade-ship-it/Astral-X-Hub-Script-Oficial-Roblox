@@ -167,6 +167,81 @@ local LobbyEncontrado = nil
 -- =================================================
 -- SISTEMAS DA ABA ASSASSINO
 -- =================================================
+-- 🔍 VERIFICAR SE É ASSASSINO
+local function GetPlayerRole()
+    local Dados = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+    if not Dados then return nil end
+    local ok, Res = pcall(function() return Dados:InvokeServer() end)
+    if not ok or not Res then return nil end
+    local MeusDados = Res[player.Name]
+    return MeusDados and MeusDados.Role or nil
+end
+
+local function EhAssassino()
+    return GetPlayerRole() == "Murderer"
+end
+
+-- 🗡️ MATAR TODOS AGORA
+local function MatarTodos()
+    local Char = player.Character
+    if not Char then return end
+
+    -- Pega a faca
+    local Faca = Char:FindFirstChild("Knife") or (player.Backpack and player.Backpack:FindFirstChild("Knife"))
+    if not Faca then
+        WindUI:Notify({Title="🔪 Assassino", Content="❌ Não tem faca ou não é o Assassino!", Duration=2})
+        return
+    end
+    if Faca.Parent ~= Char then
+        Faca.Parent = Char
+        task.wait(0.05)
+    end
+
+    -- Acessa os eventos da faca
+    local Eventos = Faca:FindFirstChild("Events")
+    if not Eventos then return end
+
+    -- Mata todo mundo
+    for _, Alvo in ipairs(Players:GetPlayers()) do
+        if Alvo ~= player and Alvo.Character and Alvo.Character:FindFirstChild("Head") then
+            pcall(function()
+                Eventos.KnifeStabbed:FireServer()
+                Eventos.HandleTouched:FireServer(Alvo.Character.Head)
+            end)
+            task.wait(0.05)
+        end
+    end
+
+    WindUI:Notify({Title="🔪 Assassino", Content="✅ Tentou matar todos!", Duration=2})
+end
+
+-- 🔁 AUTO KILL ALL (AUTOMÁTICO)
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if AutoKillAll and EhAssassino() and player.Character then
+            local Faca = player.Character:FindFirstChild("Knife") or (player.Backpack and player.Backpack:FindFirstChild("Knife"))
+            if Faca then
+                if Faca.Parent ~= player.Character then
+                    Faca.Parent = player.Character
+                end
+                local Eventos = Faca:FindFirstChild("Events")
+                if Eventos then
+                    for _, Alvo in ipairs(Players:GetPlayers()) do
+                        if Alvo ~= player and Alvo.Character and Alvo.Character:FindFirstChild("Head") then
+                            pcall(function()
+                                Eventos.KnifeStabbed:FireServer()
+                                Eventos.HandleTouched:FireServer(Alvo.Character.Head)
+                            end)
+                            task.wait(0.05)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
 
 -- =================================================
 -- SISTEMAS DA ABA XERIFE 
