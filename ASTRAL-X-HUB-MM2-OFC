@@ -246,7 +246,6 @@ end)
 -- =================================================
 -- SISTEMAS DA ABA XERIFE 
 -- =================================================
--- Obter Ping Real da Conexão
 local function GetPing()
     local ok, value = pcall(function()
         return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
@@ -319,7 +318,8 @@ local function ShootMurderer()
     end
 end
 
--- Criar Botão Flutuante de Disparo
+-- 🎯 NOVO BOTÃO EXATAMENTE COMO VOCÊ PEDIU
+-- Retangular, fundo invisível, borda preta, escrito Shoot Murderer
 local function CreateShootButton()
     if ShootButtonGui then return end
     local Gui = Instance.new("ScreenGui")
@@ -328,24 +328,31 @@ local function CreateShootButton()
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = CoreGui
 
+    -- Botão retangular
     local Btn = Instance.new("ImageButton")
-    Btn.Size = UDim2.new(0,80,0,80)
-    Btn.Position = UDim2.new(0.5,-40,0.5,-40)
-    Btn.BackgroundColor3 = Color3.fromRGB(255,40,40)
-    Btn.BackgroundTransparency = 0.3
+    Btn.Size = UDim2.new(0, 150, 0, 55)
+    Btn.Position = UDim2.new(0.5, -75, 0.5, -27)
+    Btn.BackgroundTransparency = 1 -- Fundo invisível
     Btn.BorderSizePixel = 0
     Btn.Parent = Gui
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1,0)
 
-    local Icone = Instance.new("TextLabel")
-    Icone.Size = UDim2.new(1,0,1,0)
-    Icone.BackgroundTransparency = 1
-    Icone.Text = "\u{1f52b}"
-    Icone.TextSize = 32
-    Icone.TextColor3 = Color3.new(1,1,1)
-    Icone.Font = Enum.Font.GothamBold
-    Icone.Parent = Btn
+    -- Linha preta em volta
+    local Borda = Instance.new("UIStroke")
+    Borda.Color = Color3.new(0,0,0)
+    Borda.Thickness = 2
+    Borda.Parent = Btn
 
+    -- Texto no meio
+    local Texto = Instance.new("TextLabel")
+    Texto.Size = UDim2.new(1,0,1,0)
+    Texto.BackgroundTransparency = 1
+    Texto.Text = "Shoot Murderer"
+    Texto.TextColor3 = Color3.new(1,1,1)
+    Texto.TextSize = 19
+    Texto.Font = Enum.Font.GothamBold
+    Texto.Parent = Btn
+
+    -- Controle de arrastar e clique
     Btn.InputBegan:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
             isDragging = true
@@ -443,15 +450,13 @@ local function GetGun()
     end)
 end
 
--- Loop de verificação em tempo real (Roda a cada frame/Heartbeat)
+-- Loop de verificação em tempo real
 task.spawn(function()
     while true do
         RunService.Heartbeat:Wait()
         GetGun()
     end
 end)
-
-
 
 
 
