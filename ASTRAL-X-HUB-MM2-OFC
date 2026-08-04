@@ -246,6 +246,31 @@ end)
 -- =================================================
 -- SISTEMAS DA ABA XERIFE 
 -- =================================================
+local function GetPing()
+    local ok, value = pcall(function()
+        return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+    end)
+    return ok and value or 100
+end
+
+-- Buscar Assassino na Rodada
+local function GetMurderer()
+    local DataRemote = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+    if not DataRemote then return nil end
+    local ok, Data = pcall(function() return DataRemote:InvokeServer() end)
+    if not ok or not Data then return nil end
+    for _, Player in next, Players:GetPlayers() do
+        if Player ~= player and Player:GetAttribute("Alive") then
+            local Info = Data[Player.Name]
+            if Info and Info.Role == "Murderer" then
+                return Player
+            end
+        end
+    end
+    return nil
+end
+
+-- Função Principal de Tiro e Mira Preditiva
 local function ShootMurderer()
     local Char = player.Character
     if not Char or not Char:FindFirstChild("HumanoidRootPart") then return end
