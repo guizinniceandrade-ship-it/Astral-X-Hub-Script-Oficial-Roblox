@@ -1048,6 +1048,24 @@ Sec_Assassino:Button({
     end
 })
 
+Sec_Assassino:Toggle({
+    Title = "Kill Aura",
+    Default = false,
+    Callback = function(Estado)
+        KillAura = Estado
+    end
+})
+
+Sec_Assassino:Slider({
+    Title = "Distância",
+    Min = 0,
+    Max = 50,
+    Default = 15,
+    Callback = function(Valor)
+        KillAuraDistancia = Valor
+    end
+})
+
 -- ===============================
 -- BOTOES DA ABA XERIFE
 -- ================================
