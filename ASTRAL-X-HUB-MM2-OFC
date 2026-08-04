@@ -52,6 +52,8 @@ local Aba_Tele = Window:Tab({Title="Teleporte"})
 -- VARIÁVEIS DA ABA ASSASSINO
 -- ===========================================
 local AutoKillAll = false
+local KillAura = false
+local KillAuraDistancia = 15
 
 -- ===========================================
 -- VARIÁVEIS DA ABA XERIFE
@@ -242,6 +244,51 @@ task.spawn(function()
     end
 end)
 
+-- KILL AURA 
+
+local function CalcularDistancia(Alvo)
+    local MeuChar = player.Character
+    if not MeuChar or not MeuChar:FindFirstChild("HumanoidRootPart") then return 999 end
+    if not Alvo or not Alvo.Character or not Alvo.Character:FindFirstChild("HumanoidRootPart") then return 999 end
+    return (MeuChar.HumanoidRootPart.Position - Alvo.Character.HumanoidRootPart.Position).Magnitude
+end
+
+local function KillAuraFuncao()
+    local Char = player.Character
+    if not Char then return end
+
+    local Faca = Char:FindFirstChild("Knife") or (player.Backpack and player.Backpack:FindFirstChild("Knife"))
+    if not Faca then return end
+    if Faca.Parent ~= Char then
+        Faca.Parent = Char
+        task.wait(0.05)
+    end
+
+    local Eventos = Faca:FindFirstChild("Events")
+    if not Eventos then return end
+
+    for _, Alvo in ipairs(Players:GetPlayers()) do
+        if Alvo ~= player and Alvo.Character and Alvo.Character:FindFirstChild("Head") then
+            local Dist = CalcularDistancia(Alvo)
+            if Dist <= KillAuraDistancia then
+                pcall(function()
+                    Eventos.KnifeStabbed:FireServer()
+                    Eventos.HandleTouched:FireServer(Alvo.Character.Head)
+                end)
+                task.wait(0.05)
+            end
+        end
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if KillAura and EhAssassino() then
+            KillAuraFuncao()
+        end
+    end
+end)
 
 -- =================================================
 -- SISTEMAS DA ABA XERIFE 
