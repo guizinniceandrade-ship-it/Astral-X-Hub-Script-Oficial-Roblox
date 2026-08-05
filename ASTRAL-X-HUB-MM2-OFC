@@ -1012,6 +1012,7 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- ===========================================
 -- BOTÕES DA ABA INFORMAÇÕES 
 -- ===========================================
+local Sec_Info = Aba_Info:Section({Title = "Dados do Script"})
 
 
 -- ===============================
