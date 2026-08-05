@@ -1076,6 +1076,15 @@ Sec_FarmLerp:Slider({
     end
 })
 
+local Sec_AntiAFK = Aba_Farm:Section({Title = "Scripts Anti AFK"})
+
+Sec_AntiAFK:Button({
+    Title = "hassanxzayn anti AFK",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hassanxzayn-lua/Anti-afk/main/antiafkbyhassanxzyn"))()
+    end
+})
+
 
 -- ===============================
 -- BOTOES DA ABA ESP
