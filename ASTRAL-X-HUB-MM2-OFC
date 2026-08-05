@@ -53,7 +53,6 @@ local Aba_Tele = Window:Tab({Title="Teleporte"})
 -- ===========================================
 -- VARIÁVEIS DA ABA INFORMAÇÕES 
 -- ===========================================
-local HoraInicio = os.time()
 
 
 -- ===========================================
@@ -172,27 +171,6 @@ local LobbyEncontrado = nil
 -- ===========================================
 -- SISTEMA DA ABA INFORMAÇÕES 
 -- ===========================================
-task.spawn(function()
-    while true do
-        task.wait(1)
-
-        local Jogadores = #Players:GetPlayers()
-
-        local TempoPassado = os.time() - HoraInicio
-        local HorasCont = math.floor(TempoPassado / 3600)
-        local MinutosCont = math.floor((TempoPassado % 3600) / 60)
-        local Segundos = TempoPassado % 60
-        local TempoStr = string.format("%02dh %02dm %02ds", HorasCont, MinutosCont, Segundos)
-
-        local HoraReal = os.date("%H:%M")
-
-        Sec_Info:Label({
-            Title = "",
-            Content = "Script : ASTRAL X Hub\nJogo : Murder Mystery 2\nTempo Script : "..TempoStr.."\nHoras : "..HoraReal.."\nPlayer quantidade : "..Jogadores
-        })
-    end
-end)
-
 
 
 -- =================================================
@@ -1012,7 +990,39 @@ Players.PlayerRemoving:Connect(AtualizarLista)
 -- ===========================================
 -- BOTÕES DA ABA INFORMAÇÕES 
 -- ===========================================
+-- 📌 VARIÁVEIS
+local HoraInicio = os.time()
+
+-- 🔘 ABA E SEÇÃO
 local Sec_Info = Aba_Info:Section({Title = "Dados do Script"})
+
+-- ✅ CRIA O LABEL UMA VEZ SÓ
+local Label_Info = Sec_Info:Label({
+    Title = "",
+    Content = "Carregando..."
+})
+
+-- ⚙️ SISTEMA DE ATUALIZAÇÃO
+task.spawn(function()
+    while true do
+        task.wait(1)
+
+        local Jogadores = #Players:GetPlayers()
+
+        local TempoPassado = os.time() - HoraInicio
+        local HorasCont = math.floor(TempoPassado / 3600)
+        local MinutosCont = math.floor((TempoPassado % 3600) / 60)
+        local Segundos = TempoPassado % 60
+        local TempoStr = string.format("%02dh %02dm %02ds", HorasCont, MinutosCont, Segundos)
+
+        local HoraReal = os.date("%H:%M")
+
+        -- ✅ ATUALIZA O CONTEÚDO DO LABEL
+        Label_Info:Set({
+            Content = "Script : ASTRAL X Hub\nJogo : Murder Mystery 2\nTempo Script : "..TempoStr.."\nHoras : "..HoraReal.."\nPlayer quantidade : "..Jogadores
+        })
+    end
+end)
 
 
 -- ===============================
