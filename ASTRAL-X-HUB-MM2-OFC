@@ -34,6 +34,8 @@ local Window = WindUI:CreateWindow({
 -- =========================
 -- ORDEM DAS ABAS
 -- =========================
+local Aba_Info = Window:Tab({Title = "Informações"})
+
 local Aba_Assassino = Window:Tab({Title="Assassino"})
 
 local Aba_Xerife = Window:Tab({Title="Xerife"})
