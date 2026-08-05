@@ -51,6 +51,11 @@ local Aba_Troll = Window:Tab({Title="Trollagem"})
 local Aba_Tele = Window:Tab({Title="Teleporte"})
 
 -- ===========================================
+-- VARIÁVEIS DA ABA INFORMAÇÕES 
+-- ===========================================
+
+
+-- ===========================================
 -- VARIÁVEIS DA ABA ASSASSINO
 -- ===========================================
 local AutoKillAll = false
@@ -163,7 +168,9 @@ local MapaAtual = nil
 local LobbyEncontrado = nil
 
 
-
+-- ===========================================
+-- SISTEMA DA ABA INFORMAÇÕES 
+-- ===========================================
 
 
 
@@ -981,7 +988,9 @@ Players.PlayerAdded:Connect(AtualizarLista)
 Players.PlayerRemoving:Connect(AtualizarLista)
 
 
-
+-- ===========================================
+-- BOTÕES DA ABA INFORMAÇÕES 
+-- ===========================================
 
 
 -- ===============================
