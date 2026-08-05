@@ -53,6 +53,7 @@ local Aba_Tele = Window:Tab({Title="Teleporte"})
 -- ===========================================
 -- VARIÁVEIS DA ABA INFORMAÇÕES 
 -- ===========================================
+local HoraInicio = os.time()
 
 
 -- ===========================================
@@ -171,6 +172,26 @@ local LobbyEncontrado = nil
 -- ===========================================
 -- SISTEMA DA ABA INFORMAÇÕES 
 -- ===========================================
+task.spawn(function()
+    while true do
+        task.wait(1)
+
+        local Jogadores = #Players:GetPlayers()
+
+        local TempoPassado = os.time() - HoraInicio
+        local HorasCont = math.floor(TempoPassado / 3600)
+        local MinutosCont = math.floor((TempoPassado % 3600) / 60)
+        local Segundos = TempoPassado % 60
+        local TempoStr = string.format("%02dh %02dm %02ds", HorasCont, MinutosCont, Segundos)
+
+        local HoraReal = os.date("%H:%M")
+
+        Sec_Info:Label({
+            Title = "",
+            Content = "Script : ASTRAL X Hub\nJogo : Murder Mystery 2\nTempo Script : "..TempoStr.."\nHoras : "..HoraReal.."\nPlayer quantidade : "..Jogadores
+        })
+    end
+end)
 
 
 
